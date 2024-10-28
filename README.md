@@ -1,4 +1,6 @@
-# Contact Angle Calculation
+# PANDA – Predicting Angle from Nanoscale Density Analysis
+
+![Logo](logo.png)
 
 This repository provides tools for calculating the contact angle of a droplet using a one-dimensional density profile. The code requires several input files generated with GROMACS. Below is an overview of the process and the necessary files.
 
@@ -28,9 +30,9 @@ Here:
 - -b sets the starting time (in ps) for analysis, allowing you to exclude the initial equilibration phase from the calculation. In practice, it is worth choosing this time so that averaging over the last 5 ns or ~2500 frames is performed.
 
 
-## Density Profile Calculation
+## Contact Angle Calculation
 
-Two methods are available for calculating the density profile of the droplet:
+Two methods are available for calculating the contact angle of the droplet:
 
 - `profile_approx`: Standard method for calculating contact angle from one-dimensional density profile based on the algorithm presented in the original paper
 - `profile_approx_modified`: An enhanced version of profile_approx that incorporates calculation of pore parameters from the molecular coordinatese and the addition of another hyperparameter – offset, resulting in a more accurate result when calculating the angle
