@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from ..auxil import S_doughnut, y_doughnut, phi_min_doughnut, phi_max_doughnut
+from ..auxil_theta import S_doughnut, y_doughnut, phi_min_doughnut, phi_max_doughnut
 from .Shape import Shape
 
 @dataclass

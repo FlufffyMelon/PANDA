@@ -1,5 +1,7 @@
 /.DS_Store
 /.venv
 /.vscode
-/.synthetic
-/.synthetic_old
+/synthetic/
+/synthetic_old/
+/develop_jornal.md
+/mixer

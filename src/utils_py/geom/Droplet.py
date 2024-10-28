@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from ..auxil import S_droplet, r_droplet, y_droplet, phi_min_droplet, phi_max_droplet
+from ..auxil_theta import S_droplet, r_droplet, y_droplet, phi_min_droplet, phi_max_droplet
 from .Shape import Shape
 
 @dataclass

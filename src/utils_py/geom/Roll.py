@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from ..auxil import S_roll, y_roll, phi_min_roll, phi_max_roll
+from ..auxil_theta import S_roll, y_roll, phi_min_roll, phi_max_roll
 from .Shape import Shape
 
 @dataclass

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from ..auxil import S_perforation, y_perforation, phi_min_perforation, phi_max_perforation
+from ..auxil_theta import S_perforation, y_perforation, phi_min_perforation, phi_max_perforation
 from .Shape import Shape
 
 @dataclass

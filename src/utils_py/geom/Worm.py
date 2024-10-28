@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import numpy as np
-from ..auxil import S_worm, r_worm, y_worm, phi_min_worm, phi_max_worm
+from ..auxil_theta import S_worm, r_worm, y_worm, phi_min_worm, phi_max_worm
 from .Shape import Shape
 
 @dataclass
