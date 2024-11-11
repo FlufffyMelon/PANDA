@@ -1,39 +1,57 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from typing import Union
+
 import numpy as np
-from ..auxil_theta import S_droplet, r_droplet, y_droplet, phi_min_droplet, phi_max_droplet
-from .Shape import Shape
 
-@dataclass
-class Droplet(Shape):
-    borders: np.array = field(default_factory=np.array)
-    phi: float = 0
-    th: float = 0
-    H: float = 1
+from .Interface import Interface
 
-    def get_volume(self) -> float:
-        return self.phi * np.prod(self.borders)
 
-    def get_surface(self) -> float:
-        return 42
+class Droplet(Interface):
+    def __init__(
+        self,
+        center: Union[list, np.array],
+        borders: Union[list, np.array],
+        l: float,
+        phi: float,
+        th: float = np.pi,
+        delta: float = 0,
+        extention: str = None,
+        centering: bool = False,
+    ):
+        super().__init__(center, borders, l, phi, th, delta, "droplet", extention)
 
-    def check_point(self, point) -> bool:
-        return (point[0]**2 + point[1]**2) / self.H**2 <= y_droplet(point[2] / self.H, self.borders[0] / self.H, self.phi, self.th, center=False)**2
+        self.centering = centering
+
+    def check_point(self, point: np.array) -> bool:
+        y_max = self.y(point[2], self.l, self.phi, *self.attr, center=self.centering)
+
+        return (point[0] ** 2 + point[1] ** 2) <= y_max**2
 
     def generate_point(self) -> np.array:
-        if not (phi_min_droplet(self.borders[0] / self.H, self.th) <= self.phi <= phi_max_droplet(self.borders[0] / self.H, self.th)):
-            print('!!!droplet shape doesn`t exist, try another one!!!')
-            return
+        angle = self.th if self.extention == "theta" else np.pi
 
-        r = r_droplet(self.borders[0] / self.H, self.phi, self.th) * self.H
-        point = np.array([np.random.uniform(-r, r),
-                          np.random.uniform(-r, r),
-                          np.random.uniform(r * np.cos(self.th), r)])
+        count = 0
+        while count < 1000:
+            point = np.array(
+                [
+                    np.random.uniform(-self.rd, self.rd),
+                    np.random.uniform(-self.rd, self.rd),
+                    np.random.uniform(self.rd * np.cos(angle), self.rd),
+                ]
+            )
 
-        while not self.check_point(point):
-            point = np.array([np.random.uniform(-r, r),
-                              np.random.uniform(-r, r),
-                              np.random.uniform(r * np.cos(self.th), r)])
+            if self.check_point(point):
+                break
+            count += 1
 
-        point[2] -= r * np.cos(self.th)
-        return point + self.center
+        assert count < 1000, "Can't generate point"
+
+        point *= self.H
+        point += self.center
+
+        if not self.centering:
+            point[2] -= self.center[2]
+            point[2] += self.rd * self.H * np.abs(np.cos(angle))
+            if self.extention == "delta":
+                point[2] += self.delta * self.H
+
+        return point

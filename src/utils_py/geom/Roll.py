@@ -1,39 +1,56 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from typing import Union
+
 import numpy as np
-from ..auxil_theta import S_roll, y_roll, phi_min_roll, phi_max_roll
-from .Shape import Shape
 
-@dataclass
-class Roll(Shape):
-    borders: np.array = field(default_factory=np.array)
-    phi: float = 0
-    th: float = 0
-    H: float = 1
+from .Interface import Interface
 
-    def get_volume(self) -> float:
-        return self.phi * np.prod(self.borders)
 
-    def get_surface(self) -> float:
-        return 42
+class Roll(Interface):
+    def __init__(
+        self,
+        center: Union[list, np.array],
+        borders: Union[list, np.array],
+        l: float,
+        phi: float,
+        th: float = np.pi,
+        delta: float = 0,
+        extention: str = None,
+    ):
+        super().__init__(center, borders, l, phi, th, delta, "roll", extention)
+
+        # print("l:", self.l)
+        # print("phi:", self.phi)
+        # print("attr:", self.attr)
 
     def check_point(self, point) -> bool:
-        return np.abs(point[0] / self.H) <= y_roll(point[2] / self.H, self.borders[0] / self.H, self.phi, self.th)
+        y_max = self.y(point[2], self.l, self.phi, *self.attr)
+
+        return np.abs(point[0]) <= y_max
 
     def generate_point(self) -> np.array:
-        if not (phi_min_roll(self.borders[0] / self.H, self.th) <= self.phi <= phi_max_roll(self.borders[0] / self.H, self.th)):
-            print('!!!roll shape doesn`t exist, try another one!!!')
-            return
+        y_max = self.y(0, self.l, self.phi, *self.attr)
+        d = self.delta if self.extention == "delta" else 0
+        # print("y_max:", y_max)
 
-        # Y_max = (self.y(0) if (self.theta > np.pi/2) else self.y(0.5)) * self.borders[2]
-        y_max = y_roll(0, self.borders[0] / self.H, self.phi, self.th) * self.H
-        point = np.array([np.random.uniform(-y_max, y_max),
-                          np.random.uniform(-self.borders[1]/2, self.borders[1]/2),
-                          np.random.uniform(-self.borders[2]/2, self.borders[2]/2)])
+        count = 0
+        while count < 1000:
+            point = np.array(
+                [
+                    np.random.uniform(-y_max, y_max),
+                    np.random.uniform(
+                        -0.5 * self.borders[1] / self.H, 0.5 * self.borders[1] / self.H
+                    ),
+                    np.random.uniform(-0.5 + d, 0.5 - d),
+                ]
+            )
 
-        while not self.check_point(point):
-           point = np.array([np.random.uniform(-y_max, y_max),
-                          np.random.uniform(-self.borders[1]/2, self.borders[1]/2),
-                          np.random.uniform(-self.borders[2]/2, self.borders[2]/2)])
+            if self.check_point(point):
+                break
+            count += 1
 
-        return point + self.center
+        assert count < 1000, "Can't generate point"
+
+        point *= self.H
+        point += self.center
+
+        return point

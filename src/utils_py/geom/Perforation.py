@@ -1,38 +1,52 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from typing import Union
+
 import numpy as np
-from ..auxil_theta import S_perforation, y_perforation, phi_min_perforation, phi_max_perforation
-from .Shape import Shape
 
-@dataclass
-class Perforation(Shape):
-    borders: np.array = field(default_factory=np.array)
-    phi: float = 0
-    th: float = 0
-    H: float = 1
+from .Interface import Interface
 
-    def get_volume(self) -> float:
-        return self.phi * np.prod(self.borders)
 
-    def get_surface(self) -> float:
-        return 42
+class Perforation(Interface):
+    def __init__(
+        self,
+        center: Union[list, np.array],
+        borders: Union[list, np.array],
+        l: float,
+        phi: float,
+        th: float = np.pi,
+        delta: float = 0,
+        extention: str = None,
+    ):
+        super().__init__(center, borders, l, phi, th, delta, "perforation", extention)
 
     def check_point(self, point) -> bool:
-        return (point[0]**2 + point[1]**2) / self.H**2 >= y_perforation(point[2] / self.H, self.borders[0] / self.H, self.phi, self.th)**2
+        y_max = self.y(point[2], self.l, self.phi, *self.attr)
+
+        return (point[0] ** 2 + point[1] ** 2) >= y_max**2
 
     def generate_point(self) -> np.array:
-        if not (phi_min_perforation(self.borders[0] / self.H, self.th) <= self.phi <= phi_max_perforation(self.borders[0] / self.H, self.th)):
-            print('!!!perforation shape doesn`t exist, try another one!!!')
-            return
+        d = self.delta if self.extention == "delta" else 0
 
-        # y_max = y_perforation(0, self.borders[0] / self.H, self.phi, self.th) * self.H
-        point = np.array([np.random.uniform(-self.borders[0] / 2, self.borders[0] / 2),
-                          np.random.uniform(-self.borders[1] / 2, self.borders[1] / 2),
-                          np.random.uniform(-self.borders[2] / 2, self.borders[2] / 2)])
+        count = 0
+        while count < 1000:
+            point = np.array(
+                [
+                    np.random.uniform(
+                        -0.5 * self.borders[0] / self.H, 0.5 * self.borders[0] / self.H
+                    ),
+                    np.random.uniform(
+                        -0.5 * self.borders[1] / self.H, 0.5 * self.borders[1] / self.H
+                    ),
+                    np.random.uniform(-0.5 + d, 0.5 - d),
+                ]
+            )
 
-        while not self.check_point(point):
-            point = np.array([np.random.uniform(-self.borders[0] / 2, self.borders[0] / 2),
-                              np.random.uniform(-self.borders[1] / 2, self.borders[1] / 2),
-                              np.random.uniform(-self.borders[2] / 2, self.borders[2] / 2)])
+            if self.check_point(point):
+                break
+            count += 1
 
-        return point + self.center
+        assert count < 1000, "Can't generate point"
+
+        point *= self.H
+        point += self.center
+
+        return point
