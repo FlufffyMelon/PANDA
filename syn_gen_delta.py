@@ -41,6 +41,7 @@ l = args.WIDTH_X / args.H
 # Generating of synthetic data
 for d in args.delta_list:
     for i in range(args.iterations):
+        print(f"Creating d:{d} iter:{i}")
         box = np.array([args.WIDTH_X, args.WIDTH_Y, args.H])
 
         structure = Structure(
@@ -73,8 +74,7 @@ for d in args.delta_list:
                 )
             ).astype(int)
         )
-        # numbers = [600]
-
+	
         structure = build_system(
             "./",
             structure,
@@ -88,7 +88,7 @@ for d in args.delta_list:
             min_dist2=distance["min"],
         )
 
-        dir_path = os.path.join(args.folder, f"{d:.2f}")
+        dir_path = os.path.join(args.folder, f"{d:.2f}", str(args.interface_type))
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 

@@ -17,7 +17,7 @@ class Worm(Interface):
         extention: str = None,
         centering: bool = False,
     ):
-        super().__init__(center, borders, l, phi, th, delta, "droplet", extention)
+        super().__init__(center, borders, l, phi, th, delta, "worm", extention)
 
         self.centering = centering
 
