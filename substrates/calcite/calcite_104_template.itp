@@ -1,0 +1,19 @@
+[moleculetype]
+; molname nrexcl
+  CAL    1
+
+[atoms]
+;     nr    type   resnr residue    atom    cgnr    charge      mass
+{atoms}
+
+[ constraints ]
+;      i       j    func      b0
+{constraints}
+
+[ angles ]
+;      i       j       k    func     th0     cth
+{angles}
+
+[ dihedrals ]
+;      i       j       k       l    func      С1      С2      С3      С4
+{dihedrals}

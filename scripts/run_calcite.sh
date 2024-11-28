@@ -1,0 +1,20 @@
+.venv/bin/python py/cal_script.py \
+--H 9 \
+--phi 0.5 \
+--build false \
+--Lx 20 \
+--Ly 5 \
+--Lz 4 \
+--unitcell substrates/calcite/calcite_104_unitcell.gro \
+--freeze_substr false \
+--exp_folder calcite_decane_tip3p_npt_100 \
+--system_name cal_dec_tip3p \
+--gpu_id 1 \
+--n_mpi 8 \
+--init_core 8 \
+--node 2 \
+--server_folder PANDA_exp \
+--ansambel npt \
+--nsteps 5000000 \
+--temp 393 \
+--press 100

@@ -1,7 +1,11 @@
 /.DS_Store
 /.venv
 /.vscode
-/synthetic/
+/synthetic_delta/
+/synthetic_theta/
 /synthetic_old/
 /develop_jornal.md
 /mixer
+/src/utils_cpp/mixer
+/systems/
+/data/

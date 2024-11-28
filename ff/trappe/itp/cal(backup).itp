@@ -1,0 +1,67 @@
+[moleculetype]
+; molname nrexcl
+  CAL    1
+
+[atoms]
+;     nr    type   resnr residue    atom    cgnr    charge      mass
+       1      CA       1     CAL     Ca1       1     1.668    40.078
+       2      CA       1     CAL     Ca2       1     1.668    40.078
+       3      CA       1     CAL     Ca3       1     1.668    40.078
+       4      CA       1     CAL     Ca4       1     1.668    40.078
+       5      CA       1     CAL     Ca5       1     1.668    40.078
+       6      CA       1     CAL     Ca6       1     1.668    40.078
+       7      CA       1     CAL     Ca7       1     1.668    40.078
+       8      CA       1     CAL     Ca8       1     1.668    40.078
+       9      CA       1     CAL     Ca9       1     1.668    40.078
+      10      CA       1     CAL    Ca10       1     1.668    40.078
+      11      CA       1     CAL    Ca11       1     1.668    40.078
+      12      CA       1     CAL    Ca12       1     1.668    40.078
+      13     CCA       1     CAL      C1       1     0.999    12.011
+      14     CCA       1     CAL      C2       1     0.999    12.011
+      15     CCA       1     CAL      C3       1     0.999    12.011
+      16     CCA       1     CAL      C4       1     0.999    12.011
+      17     CCA       1     CAL      C5       1     0.999    12.011
+      18     CCA       1     CAL      C6       1     0.999    12.011
+      19     CCA       1     CAL      C7       1     0.999    12.011
+      20     CCA       1     CAL      C8       1     0.999    12.011
+      21     CCA       1     CAL      C9       1     0.999    12.011
+      22     CCA       1     CAL     C10       1     0.999    12.011
+      23     CCA       1     CAL     C11       1     0.999    12.011
+      24     CCA       1     CAL     C12       1     0.999    12.011
+      25     OCA       1     CAL      O1       1    -0.889    15.999
+      26     OCA       1     CAL      O2       1    -0.889    15.999
+      27     OCA       1     CAL      O3       1    -0.889    15.999
+      28     OCA       1     CAL      O4       1    -0.889    15.999
+      29     OCA       1     CAL      O5       1    -0.889    15.999
+      30     OCA       1     CAL      O6       1    -0.889    15.999
+      31     OCA       1     CAL      O7       1    -0.889    15.999
+      32     OCA       1     CAL      O8       1    -0.889    15.999
+      33     OCA       1     CAL      O9       1    -0.889    15.999
+      34     OCA       1     CAL     O10       1    -0.889    15.999
+      35     OCA       1     CAL     O11       1    -0.889    15.999
+      36     OCA       1     CAL     O12       1    -0.889    15.999
+      37     OCA       1     CAL     O13       1    -0.889    15.999
+      38     OCA       1     CAL     O14       1    -0.889    15.999
+      39     OCA       1     CAL     O15       1    -0.889    15.999
+      40     OCA       1     CAL     O16       1    -0.889    15.999
+      41     OCA       1     CAL     O17       1    -0.889    15.999
+      42     OCA       1     CAL     O18       1    -0.889    15.999
+      43     OCA       1     CAL     O19       1    -0.889    15.999
+      44     OCA       1     CAL     O20       1    -0.889    15.999
+      45     OCA       1     CAL     O21       1    -0.889    15.999
+      46     OCA       1     CAL     O22       1    -0.889    15.999
+      47     OCA       1     CAL     O23       1    -0.889    15.999
+      48     OCA       1     CAL     O24       1    -0.889    15.999
+      49     OCA       1     CAL     O25       1    -0.889    15.999
+      50     OCA       1     CAL     O26       1    -0.889    15.999
+      51     OCA       1     CAL     O27       1    -0.889    15.999
+      52     OCA       1     CAL     O28       1    -0.889    15.999
+      53     OCA       1     CAL     O29       1    -0.889    15.999
+      54     OCA       1     CAL     O30       1    -0.889    15.999
+      55     OCA       1     CAL     O31       1    -0.889    15.999
+      56     OCA       1     CAL     O32       1    -0.889    15.999
+      57     OCA       1     CAL     O33       1    -0.889    15.999
+      58     OCA       1     CAL     O34       1    -0.889    15.999
+      59     OCA       1     CAL     O35       1    -0.889    15.999
+      60     OCA       1     CAL     O36       1    -0.889    15.999
+
