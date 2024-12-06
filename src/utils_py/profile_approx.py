@@ -19,22 +19,24 @@ def profile_approx(
     """
     Approximate a density profile using a classical algorithm from the article.
 
+    The algorithm takes into account a surface type, specified by the interface_type parameter.
+    The surface types are: droplet, doughnut, worm, roll, perforation or layer.
+
     Parameters:
-    dens_profile_file (str): Path to the density profile file with an .xvg extension.
-    rho_bulk (float): Bulk density of the droplet.
-    l (float): Ratio of pore length to pore height.
-    phi (float): Volume fraction of the droplet.
-    H (float): Height of the pore.
-    interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
-    display (bool, optional): If True, display optimization details. Default is True.
+        dens_profile_file (str): Path to the density profile file with an .xvg extension.
+        rho_bulk (float): Bulk density of the droplet.
+        l (float): Ratio of pore length to pore height.
+        phi (float): Volume fraction of the droplet.
+        H (float): Height of the pore.
+        interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
+        display (bool, optional): If True, display optimization details. Default is True.
 
     Returns:
-    tuple:
-        - z (np.array): Normalized z-coordinates of the density profile.
-        - dens (np.array): Normalized density profile values.
-        - best (dict): Best-fit parameters, including 'theta' angle in radians.
+        tuple:
+            - z (np.array): Normalized z-coordinates of the density profile.
+            - dens (np.array): Normalized density profile values.
+            - best (dict): Best-fit parameters, including 'theta' angle in radians.
     """
-
     assert dens_profile_file.endswith(
         "xvg"
     ), "The density profile file must have the extension .xvg"
@@ -64,7 +66,21 @@ def profile_approx(
     ), "There is no such type of surface. Could be droplet, doughnut, worm, roll, perforation or layer"
     rho_theta = getattr(src.utils_py.auxil, f"rho_{interface_type.lower()}_theta")
 
+    # Function to minimize for finding the best angle theta
     def L1(x, z, dens, l, phi):
+        """
+        Function to minimize for finding the best angle theta.
+
+        Parameters:
+            x (list): List of parameters to optimize, in this case only angle theta.
+            z (np.array): Normalized z-coordinates of the density profile.
+            dens (np.array): Normalized density profile values.
+            l (float): Ratio of pore length to pore height.
+            phi (float): Volume fraction of the droplet.
+
+        Returns:
+            float: Sum of absolute differences between the calculated and the experimental densities.
+        """
         return np.sum(np.abs(rho_theta(z, l, phi, x[0]) - dens))
 
     # Minimization process
@@ -95,27 +111,30 @@ def profile_approx_alpha(
     Approximate a density profile using a generalized algorithm taking into account theta and delta.
 
     Parameters:
-    dens_profile_file (str): Path to the density profile file with an .xvg extension.
-    rho_bulk (float): Bulk density of the droplet.
-    l (float): Ratio of pore length to pore height.
-    phi (float): Volume fraction of the droplet.
-    H (float): Height of the pore.
-    interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
-    display (bool, optional): If True, display optimization details. Default is True.
+        dens_profile_file (str): Path to the density profile file with an .xvg extension.
+        rho_bulk (float): Bulk density of the droplet.
+        l (float): Ratio of pore length to pore height.
+        phi (float): Volume fraction of the droplet.
+        H (float): Height of the pore.
+        interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
+        display (bool, optional): If True, display optimization details. Default is True.
 
     Returns:
-    tuple:
-        - z (np.array): Normalized z-coordinates of the density profile.
-        - dens (np.array): Normalized density profile values.
-        - best (dict): Best-fit parameters, including 'theta' angle in radians.
+        tuple:
+            - z (np.array): Normalized z-coordinates of the density profile.
+            - dens (np.array): Normalized density profile values.
+            - best (dict): Best-fit parameters, including 'theta' angle in radians.
     """
 
+    # Check the file extension
     assert dens_profile_file.endswith(
         "xvg"
     ), "The density profile file must have the extension .xvg"
-    # Reading density profile file
+
+    # Read the density profile file
     z, dens = np.loadtxt(dens_profile_file, comments=["@", "#"], unpack=True)
 
+    # Call the function to approximate the density profile
     return _profile_approx_alpha_from_array(
         dens, z, rho_bulk, l, phi, H, interface_type, display
     )
@@ -131,43 +150,60 @@ def _profile_approx_alpha_from_array(
     interface_type: str,
     display: bool = True,
 ) -> tuple[np.array, np.array, dict]:
-    dens = dens.copy() / rho_bulk
-    z = z.copy() / H
+    """
+    Approximate a density profile using a generalized algorithm considering theta and delta.
 
-    left, right = 0, len(z)
-    # Find left none zero bin
-    for i in range(len(z)):
-        if z[i] > -0.5:
-            left = i - 1
-            break
+    Parameters:
+        dens (np.array): Density profile values.
+        z (np.array): z-coordinates of the density profile.
+        rho_bulk (float): Bulk density of the droplet.
+        l (float): Ratio of pore length to pore height.
+        phi (float): Volume fraction of the droplet.
+        H (float): Height of the pore.
+        interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
+        display (bool, optional): If True, display optimization details. Default is True.
 
-    # Find right none zero bin
-    for i in range(len(z) - 1, -1, -1):
-        if z[i] < 0.5:
-            right = i + 1
-            break
+    Returns:
+        tuple: Contains normalized z-coordinates, normalized density profile values,
+               and best-fit parameters including 'theta' and 'delta'.
+    """
+    dens = dens.copy() / rho_bulk  # Normalize the density profile
+    z = z.copy() / H  # Normalize the z-coordinates
 
-    # Create a function from surface type
+    left = np.argmax(z > -0.5) - 1  # Find the left boundary of the droplet
+    right = np.argmax(z[::-1] < 0.5)  # Find the right boundary of the droplet
+
+    # Create a function based on the surface type
     assert (
         interface_type.lower()
         in ["droplet", "doughnut", "worm", "roll", "perforation", "layer"]
     ), "There is no such type of surface. Could be droplet, doughnut, worm, roll, perforation or layer"
     rho_alpha = getattr(src.utils_py.auxil, f"rho_{interface_type.lower()}_alpha")
 
-    def L1(x, z, dens, l, phi):
-        return np.sum(np.abs(rho_alpha(z, l, phi, x[0], x[1]) - dens))
+    def L1(x):
+        """
+        Function to minimize for finding the best angles theta and delta.
+
+        Parameters:
+            x (list): List of parameters to optimize, [theta, delta].
+
+        Returns:
+            float: Sum of absolute differences between the calculated and the experimental densities.
+        """
+        return np.sum(
+            np.abs(rho_alpha(z[left:right], l, phi, x[0], x[1]) - dens[left:right])
+        )
 
     # Minimization process
-    x0 = [3 * np.pi / 4, 0]
+    x0 = [3 * np.pi / 4, 0]  # Initial guess for theta and delta
     res = minimize(
         L1,
         x0,
-        (z[left:right], dens[left:right], l, phi),
         method="Nelder-Mead",
         bounds=((np.pi / 2, np.pi), (0, 0.5)),
         options={"disp": display},
     )
-    best = {"theta": res.x[0], "delta": res.x[1]}
+    best = {"theta": res.x[0], "delta": res.x[1]}  # Best-fit parameters
 
     return z, dens, best
 
@@ -182,7 +218,6 @@ def profile_approx_modified(
 ) -> tuple[np.array, np.array, float, float, float, dict]:
     """
     Modified approximation of a density profile, incorporating real pore height and volume fraction.
-    Some trick until formulas accounting for a non-zero wetting layer are obtained.
 
     Parameters:
     structure_file (str): Path to the structure file with a .gro extension.
@@ -202,20 +237,23 @@ def profile_approx_modified(
         - best (dict): Best-fit parameters including 'theta' angle and 'offset'.
     """
 
+    # Ensure the structure file has the correct extension
     assert structure_file.endswith(
         "gro"
     ), "The structure file must have the extension .gro"
-    # Reading structure file
+    # Read the structure file
     structure = read_gro(structure_file)
 
+    # Ensure the density profile file has the correct extension
     assert dens_profile_file.endswith(
         "xvg"
     ), "The density profile file must have the extension .xvg"
-    # Reading density profile file
+    # Read the density profile file
     z, dens = np.loadtxt(dens_profile_file, comments=["@", "#"], unpack=True)
 
+    # Initialize z_min and z_max based on the structure box dimensions
     z_min, z_max = structure.box[2] / 2, structure.box[2] / 2
-    # Process atoms of droplet to find real pore height
+    # Process atoms of the droplet to find real pore height
     for i, atom_label in enumerate(structure.atoms):
         if atom_label.mol_name in droplet_mols:
             z_min = min(z_min, structure.atoms_xyz[i, 2])
@@ -223,27 +261,31 @@ def profile_approx_modified(
     H = z_max - z_min
     print("real H:", H)
 
+    # Calculate the adjusted pore length-to-height ratio
     l = structure.box[0] / H
 
+    # Normalize the density profile
     dens /= rho_bulk
     z /= H
 
-    # Integrate density profile numericaly to get real volume fraction
+    # Integrate the density profile numerically to get the real volume fraction
     real_phi = np.trapz(dens, z)
     print("real phi:", real_phi)
 
+    # Find the left non-zero bin
     left, right = 0, len(z)
     for i in range(len(z)):
         if z[i] > -0.5:
             left = i - 1
             break
 
+    # Find the right non-zero bin
     for i in range(len(z) - 1, -1, -1):
         if z[i] < 0.5:
             right = i + 1
             break
 
-    # Create a function from surface type
+    # Create a function based on the surface type
     assert (
         interface_type.lower()
         in ["droplet", "doughnut", "worm", "roll", "perforation", "layer"]
@@ -251,10 +293,23 @@ def profile_approx_modified(
     rho_theta = getattr(src.utils_py.auxil, f"rho_{interface_type.lower()}_theta")
 
     def L1(x, z, dens, l, phi):
+        """
+        Function to minimize for finding the best angle theta and offset.
+
+        Parameters:
+            x (list): List of parameters to optimize, [theta, offset].
+            z (np.array): Normalized z-coordinates of the density profile.
+            dens (np.array): Normalized density profile values.
+            l (float): Ratio of pore length to pore height.
+            phi (float): Volume fraction of the droplet.
+
+        Returns:
+            float: Sum of absolute differences between the calculated and the experimental densities.
+        """
         return np.sum(np.abs(rho_theta(z, l, phi, x[0]) + x[1] - dens))
 
     # Minimization process
-    x0 = [3 * np.pi / 4, 0]
+    x0 = [3 * np.pi / 4, 0]  # Initial guess for theta and offset
     res = minimize(
         L1,
         x0,

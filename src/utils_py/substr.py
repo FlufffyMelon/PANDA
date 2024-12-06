@@ -12,17 +12,38 @@ from itertools import combinations
 
 
 def base62_encode(num, length=4):
+    """
+    Encode a given number in base62.
+
+    Parameters
+    ----------
+    num : int
+        The number to be encoded.
+    length : int, optional
+        The desired length of the encoded string. If the
+        number is shorter than this, it will be padded with
+        zeros. The default is 4.
+
+    Returns
+    -------
+    str
+        The encoded string.
+
+    """
     chars = string.digits + string.ascii_uppercase + string.ascii_lowercase
     base = len(chars)
     encoded = []
 
-    while num > 0:
-        encoded.append(chars[num % base])
-        num //= base
+    # Repeatedly divide the number by the base and use the remainder
+    # to construct the encoded string.
+    q, r = divmod(num, base)
+    encoded.append(chars[r])
+    while q > 0:
+        q, r = divmod(q, base)
+        encoded.append(chars[r])
 
     # Pad with zeros if necessary
-    while len(encoded) < length:
-        encoded.append(chars[0])
+    encoded.extend([chars[0]] * (length - len(encoded)))
 
     return "".join(reversed(encoded))
 
@@ -30,6 +51,29 @@ def base62_encode(num, length=4):
 def generate_substrate(
     unitcell_path: str, Lx: float, Ly: float, Lz: float, freeze_substr: bool = False
 ):
+    """
+    Generate a substrate from a given unitcell.
+
+    Parameters
+    ----------
+    unitcell_path : str
+        The path to the unitcell .gro file.
+    Lx : float
+        The desired length of the substrate in the x direction.
+    Ly : float
+        The desired length of the substrate in the y direction.
+    Lz : float
+        The desired length of the substrate in the z direction.
+    freeze_substr : bool
+        Whether or not to freeze the substrate. If True, the names of the atoms
+        will not be changed. Default is False.
+
+    Returns
+    -------
+    str
+        The filename of the generated substrate.
+
+    """
     unitcell = read_gro(unitcell_path)
     unitcell_box = unitcell.box
 
@@ -75,6 +119,7 @@ def generate_substrate(
                     )
 
     if not freeze_substr:
+        # Rename the atoms to be unique
         counter_dict = {"C": 0, "O": 0, "Ca": 0}
         for i, label in np.ndenumerate(structure.atoms):
             name = "".join([i for i in label.name if not i.isdigit()])
@@ -93,21 +138,31 @@ def generate_substrate(
 
 
 def get_box_vectors(box: np.array):
-    assert (len(box) == 3) or (len(box) == 9)
+    assert len(box) in {3, 9}
 
     if len(box) == 3:
-        ex = np.array([box[0], 0, 0])
-        ey = np.array([0, box[1], 0])
-        ez = np.array([0, 0, box[2]])
-    elif len(box) == 9:
-        ex = np.array([box[0], box[3], box[4]])
-        ey = np.array([box[5], box[1], box[6]])
-        ez = np.array([box[7], box[8], box[2]])
+        ex, ey, ez = np.diag(box)
+    else:
+        ex, ey, ez = box[:3], box[3:6], box[6:]
 
-    return (ex, ey, ez)
+    return ex, ey, ez
 
 
 def generate_calcite_itp(substr_path: str):
+    """
+    Generate .itp file for a substrate, based on the .gro file.
+
+    Parameters
+    ----------
+    substr_path : str
+        The path to the .gro file of the substrate.
+
+    Returns
+    -------
+    str
+        The filename of the generated .itp file.
+
+    """
     substr = read_gro(substr_path)
     # substr.box = substr.box[:3]
     assert len(substr.box) == 3, "Box should be orthogonal"
@@ -198,6 +253,27 @@ def generate_calcite_itp(substr_path: str):
 
 
 def get_calcite_neighbors_list(substr: Structure):
+    """
+    Generate a dictionary of neighbors for a given substrate Structure.
+
+    Parameters
+    ----------
+    substr : Structure
+        The substrate structure.
+
+    Returns
+    -------
+    dict
+        A dictionary of neighbors, where each key is a Carbon atom index and
+        the value is a list of its Oxygen neighbors.
+
+    Notes
+    -----
+    The substrate structure should be a calcite crystal, with the atoms labeled
+    as "Ca" and "C" for Calcium and Carbon, respectively. The Oxygen atoms are
+    labeled as "O". The box vectors should be orthogonal.
+
+    """
     # substr.box = substr.box[:3]
     assert len(substr.box) == 3, "Box should be orthogonal"
 
@@ -213,6 +289,7 @@ def get_calcite_neighbors_list(substr: Structure):
         if name_i == "C":
             O_neigh = []
             for j in range(len(substr.atoms)):
+                # Check if the neighbor is an Oxygen atom
                 if len(O_neigh) > 3:
                     print("Too many neighbours...")
                     break
@@ -223,6 +300,7 @@ def get_calcite_neighbors_list(substr: Structure):
                 )
 
                 if name_j == "O":
+                    # Check if the distance between the Carbon atom and the Oxygen atom is within the cutoff
                     if np.linalg.norm(rij(i, j, substr)) <= l:
                         O_neigh.append(j)
 
@@ -236,16 +314,36 @@ def get_calcite_neighbors_list(substr: Structure):
 
 
 def get_calcite_neighbors_list_numpy(substr: Structure):
-    # substr.box = substr.box[:3]
+    """
+    Generate a dictionary of calcite atom neighbors.
+
+    For each carbon atom in the structure, find all neighboring oxygen atoms
+    within a specified cutoff distance and store them in a dictionary.
+
+    Parameters
+    ----------
+    substr : Structure
+        A Structure object containing atoms and their positions.
+
+    Returns
+    -------
+    dict
+        A dictionary where keys are indices of carbon atoms and values are lists
+        of indices of neighboring oxygen atoms.
+
+    """
     assert len(substr.box) == 3, "Box should be orthogonal"
 
-    # Do not touch!!!!!!
+    # Cutoff distance for determining neighboring atoms
     l = 0.118 + 0.022
     neigh_dict = dict()
 
+    # Initialize masks and lists for oxygen and carbon atom indices
     oxygen_mask = np.zeros(len(substr.atoms), dtype=bool)
     oxygen_real_ids = []
     carbon_ids = []
+
+    # Identify indices of oxygen and carbon atoms
     for i in range(len(substr.atoms)):
         name = (
             substr.atoms[i].name[:2]
@@ -261,26 +359,52 @@ def get_calcite_neighbors_list_numpy(substr: Structure):
     oxygen_real_ids = np.array(oxygen_real_ids)
 
     print("Generating neighbors list")
+    # Iterate over carbon atoms to find their neighboring oxygen atoms
     for i in tqdm(carbon_ids):
-        O_neigh = []
-
+        # Calculate relative positions of potential neighboring oxygen atoms
         rij = (substr.atoms_xyz - substr.atoms_xyz[i, :])[oxygen_mask]
         mask = np.abs(rij) >= substr.box / 2
         rij -= substr.box * mask * np.sign(rij)
-        neigh_oxygen = np.argwhere(np.linalg.norm(rij, axis=1) < l).ravel()
 
+        # Determine indices of oxygen atoms within the cutoff distance
+        neigh_oxygen = np.argwhere(np.linalg.norm(rij, axis=1) < l).ravel()
         O_neigh = list(oxygen_real_ids[neigh_oxygen])
 
-        if len(O_neigh) != 3:
-            print("Incorrect number of neighbours!!!", len(O_neigh))
-            exit()
+        # Ensure exactly 3 neighboring oxygen atoms are found
+        assert len(O_neigh) != 3, f"Incorrect number of neighbours ({len(O_neigh)})!!!"
 
+        # Store the neighbors in the dictionary
         neigh_dict[i] = O_neigh.copy()
 
     return neigh_dict
 
 
 def rij(i, j, structure):
+    """
+    Calculate the relative position vector between atoms i and j taking into account PBC.
+
+    Parameters
+    ----------
+    i : int
+        Index of the first atom.
+    j : int
+        Index of the second atom.
+    structure : Structure
+        The structure object containing the atoms and their positions.
+
+    Returns
+    -------
+    numpy.array
+        The relative position vector between atoms i and j.
+
+    Notes
+    -----
+    The calculation takes into account the periodic boundary conditions of the
+    simulation box. If the relative position vector is larger than half the box
+    size in any dimension, the box size is subtracted from the relative position
+    vector to 'wrap' it around to the other side of the box.
+
+    """
     rij = structure.atoms_xyz[j, :] - structure.atoms_xyz[i, :]
     mask = np.abs(rij) >= structure.box / 2
     rij -= structure.box * mask * np.sign(rij)
@@ -289,12 +413,41 @@ def rij(i, j, structure):
 
 
 def angle(i, j, k, structure):
+    """
+    Calculate the angle between the vectors defined by atoms i-j and j-k.
+
+    Parameters
+    ----------
+    i : int
+        Index of the first atom.
+    j : int
+        Index of the second atom.
+    k : int
+        Index of the third atom.
+    structure : Structure
+        The structure object containing the atoms and their positions.
+
+    Returns
+    -------
+    float
+        The angle in degrees between the vectors defined by atoms i-j and j-k.
+
+    Notes
+    -----
+    The calculation takes into account the periodic boundary conditions of the
+    simulation box.
+
+    """
+    # Calculate the relative position vectors between atoms i-j and j-k
     ji = rij(j, i, structure)
     unit_ji = ji / np.linalg.norm(ji)
     jk = rij(j, k, structure)
     unit_jk = jk / np.linalg.norm(jk)
 
+    # Calculate the dot product between the two vectors
     dot_product = np.dot(unit_ji, unit_jk)
+
+    # Calculate the angle from the dot product
     angle = np.arccos(dot_product)
 
     return np.rad2deg(angle)
