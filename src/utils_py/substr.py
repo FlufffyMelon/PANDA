@@ -109,7 +109,7 @@ def get_box_vectors(box: np.array):
 
 def generate_calcite_itp(substr_path: str):
     substr = read_gro(substr_path)
-    substr.box = substr.box[:3]
+    # substr.box = substr.box[:3]
     assert len(substr.box) == 3, "Box should be orthogonal"
 
     folder, substr_filename = os.path.split(substr_path)
@@ -123,7 +123,7 @@ def generate_calcite_itp(substr_path: str):
     #     print(f"Itp for substrate already exist! Please check `{folder}/itp`")
     #     return output_name
 
-    neigh_dict = get_calcite_neighbors_list_numpy(substr_path)
+    neigh_dict = get_calcite_neighbors_list_numpy(substr)
 
     # Writing text of [ atoms ] section
     atoms_text = ""

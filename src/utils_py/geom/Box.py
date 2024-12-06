@@ -2,6 +2,7 @@ from typing import Union
 
 import numpy as np
 
+from ..utils import validate_list_and_array
 from .Shape import Shape
 
 
@@ -9,15 +10,8 @@ class Box(Shape):
     def __init__(self, center: Union[list, np.array], borders: Union[list, np.array]):
         super().__init__()
 
-        if isinstance(center, list):
-            self.center = np.array(center)
-        elif isinstance(center, np.ndarray):
-            self.center = center
-
-        if isinstance(borders, list):
-            self.borders = np.array(borders)
-        elif isinstance(borders, np.ndarray):
-            self.borders = borders
+        self.center = validate_list_and_array(center)
+        self.borders = validate_list_and_array(borders)
 
     def get_volume(self) -> float:
         return np.prod(self.borders)

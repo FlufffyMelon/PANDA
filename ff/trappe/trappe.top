@@ -18,9 +18,10 @@
 ; TraPPE
    CH2     14.027    0.000  A    5.81e-03    2.21e-05; CHX-[CH2]-CHX
    CH3     15.035    0.000  A    9.06e-03    2.52e-05; [CH3]-CHX
-; tip3p
+; water (tip3p/tip4p2005)
    OWT    15.9994    0.000  A    3.09e-03    3.07e-06
    HWT     1.0080    0.000  A    0.00e+00    0.00e+00
+   MWT     0.00000   0.000  D    0.00e+00    0.00e+00
 
 
 [ nonbond_params ]
@@ -30,7 +31,7 @@
   CCA  CCA       1    1.43e-02    4.61e-06
   CCA  OCA       1    3.08e-04    9.04e-10
   OCA  OCA       1    5.21e-05    5.94e-07
-; pairwise LJ for calcite and TIP3P (https://doi.org/10.1021/acs.energyfuels.7b02451)
+; pairwise LJ for calcite and water (https://doi.org/10.1021/acs.energyfuels.7b02451)
    CA  OWT       1    2.00e-03    8.85e-07
   CCA  OWT       1    3.39e-03    5.91e-06
   OCA  OWT       1    2.25e-03    2.07e-06
@@ -39,6 +40,13 @@
   CH2  CH3       1    7.27e-03    2.37e-05
   CH2  OWT       1    4.40e-03    8.88e-06
   CH3  OWT       1    5.41e-03    9.19e-06
+; pairwise LJ for calcite and decane (scaling)
+  CH2   CA       1    {C6_CH2_CA}    {C12_CH2_CA}
+  CH2  OCA       1    {C6_CH2_OCA}    {C12_CH2_OCA}
+  CH2  CCA       1    {C6_CH2_CCA}    {C12_CH2_CCA}
+  CH3   CA       1    {C6_CH3_CA}    {C12_CH3_CA}
+  CH3  OCA       1    {C6_CH3_OCA}    {C12_CH3_OCA}
+  CH3  CCA       1    {C6_CH3_CCA}    {C12_CH3_CCA}
 
 
 [ bondtypes ]
@@ -52,6 +60,7 @@
 ; CHX-CHY
   CH2  CH2       1    1.54e-01
   CH3  CH2       1    1.54e-01
+  CH3  CH3       1    1.54e-01
 
 [ angletypes ]
 ;   i    j    k    func     th0         cth

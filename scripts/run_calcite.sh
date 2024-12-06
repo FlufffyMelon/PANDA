@@ -5,16 +5,17 @@
 --Lx 20 \
 --Ly 5 \
 --Lz 4 \
+--offset 0.5 \
 --unitcell substrates/calcite/calcite_104_unitcell.gro \
 --freeze_substr false \
---exp_folder calcite_decane_tip3p_npt_100 \
---system_name cal_dec_tip3p \
+--scale 2.5 \
+--exp_folder calcite_decane_tip4p_sc_2.5_offset \
+--system_name cal_dec_tip4p \
 --gpu_id 1 \
 --n_mpi 8 \
 --init_core 8 \
---node 2 \
---server_folder PANDA_exp \
---ansambel npt \
---nsteps 5000000 \
---temp 393 \
---press 100
+--node 4 \
+--server_folder PANDA_exp/scaling \
+--ansambel nvt \
+--nsteps 20000000 \
+--temp 300
