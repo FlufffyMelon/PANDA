@@ -1,0 +1,23 @@
+python py/cal_script_mixture.py \
+--H 5 \
+--phi 0.5 \
+--build true \
+--Lx 12 \
+--Ly 12 \
+--Lz 4 \
+--offset 0.2 \
+--unitcell substrates/calcite/calcite_104_unitcell.gro \
+--gen_substr false \
+--freeze_substr false \
+--scale 2.3 \
+--ansambel nvt \
+--nsteps 2500000 \
+--temp 300 \
+--gpu_id 1 \
+--n_mpi 8 \
+--init_core 8 \
+--node 2 \
+--exp_folder calcite_decane_water_*angle*_*l*_*phi* \
+--system_name cal_dec_tip4p \
+--server_folder PANDA_exp \
+--send_to_server false

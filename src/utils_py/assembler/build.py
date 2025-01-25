@@ -58,7 +58,7 @@ def build_system(
         )
         mol_size = np.max(np.linalg.norm(mol.atoms_xyz, axis=1))
 
-        for mol_id in tqdm(range(numbers[i])):
+        for mol_id in tqdm(range(numbers[i]), desc=name):
             new_point = insert_point_into_shape(
                 shapes[i],
                 points,

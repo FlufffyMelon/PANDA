@@ -1,5 +1,7 @@
 from typing import Union
 import numpy as np
+import mdtraj as md
+from tqdm import tqdm
 
 
 def get_numerical_density_profile(
@@ -23,6 +25,94 @@ def get_numerical_density_profile(
         axis -= axis[-1] / 2
 
     return axis[:-1], density_profiles
+
+
+def get_each_density_profile(
+    trajectory_file: str,
+    topology_file: str,
+    residue: str,
+    sl: int,
+    chunk_length: float,
+    begin_time: float,
+    time: float,
+    timestep: float,
+    units: str = "ps",
+):
+    """
+    Calculate all density profiles for given trajectory and topology files.
+
+    Parameters
+    ----------
+    trajectory_file : str
+        Path to the GROMACS trajectory (.xtc) file.
+    topology_file : str
+        Path to the GROMACS topology (.gro) file.
+    residue : str
+        Residue type of the droplet.
+    sl : int
+        Number of slices to divide the pore into.
+    chunk_length : float
+        Length of the chunk for dynamic load of trajectory.
+    begin_time : float
+        Starting time for calculations.
+    time : float
+        Total time of the simulation.
+    timestep : float
+        Time step of the simulation.
+    units : str, optional
+        Units of time in the simulation. Default is 'ps'.
+
+    Returns
+    -------
+    axises : np.ndarray
+        Array of axises of the profiles.
+    denses : np.ndarray
+        Array of density profiles.
+    """
+
+    # Validate inputs and initialize variables
+    assert residue in ["DECAN"], "This residue type is not available"
+    assert units.lower() in ["ns", "ps"], "Wrong units"
+    u = 1000 if units.lower() == "ns" else 1
+
+    # Calculate the number of frames and chunks
+    N = int(time * u) // int(timestep * u) + 1
+    L = int((time - begin_time) * u) // int(chunk_length * u)
+    tau = int(chunk_length * u) // int(timestep * u)
+    start_frame = N - tau * L
+
+    # Pre-allocate arrays for results
+    axises = np.empty((L * tau, sl))
+    denses = np.empty((L * tau, sl))
+
+    # Iterate over trajectory chunks
+    chunk_iter = md.iterload(
+        trajectory_file, top=topology_file, chunk=tau, skip=start_frame
+    )
+    for chunk_idx, chunk in enumerate(tqdm(chunk_iter, total=L, desc="Chunk")):
+        assert (
+            int(timestep) == int(chunk.timestep)
+        ), f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
+
+        # Select residue positions and apply periodic boundary conditions
+        residue_mask = chunk.top.select(f"resname {residue}")
+        positions = chunk.xyz[:, residue_mask, :]
+        box = chunk.unitcell_lengths[:, np.newaxis, :]
+
+        center = get_center_pbc(positions, box)
+        positions -= center
+        positions += box / 2
+        positions = apply_pbc(positions, box)
+
+        # Calculate density profiles for each frame
+        for i in range(tau):
+            axis_i, dens_i = get_numerical_density_profile(
+                positions[i, :, :], box[i, :, :], sl, center=True
+            )
+            axises[chunk_idx * tau + i] = axis_i
+            denses[chunk_idx * tau + i] = dens_i
+
+    return axises, denses
 
 
 def get_center_pbc(positions: np.array, box: np.array):
@@ -95,3 +185,12 @@ def validate_list_and_array(array: Union[list, np.array]):
         return np.array(array)
     elif isinstance(array, np.ndarray):
         return array
+
+def str2bool(s: str) -> bool:
+    """Helper function to support boolean command line arguments."""
+    if s.lower() in {"true", "t", "1"}:
+        return True
+    elif s.lower() in {"false", "f", "0"}:
+        return False
+    else:
+        raise ValueError(f"Invalid boolean value: {s}")

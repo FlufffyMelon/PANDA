@@ -1,12 +1,13 @@
-import mdtraj as md
 import numpy as np
+import argparse
+import sys
 from tqdm import tqdm
 
-from .profile_approx import _profile_approx_alpha_from_array
-from .utils import get_numerical_density_profile, get_center_pbc, apply_pbc
+from profile_approx import _profile_approx_alpha_from_array
+from utils import get_each_density_profile, str2bool
 
 
-def get_statistical_inefficiency_RCA(
+def get_statistical_inefficiency(
     trajectory_file: str,
     topology_file: str,
     rho_bulk: float,
@@ -16,17 +17,17 @@ def get_statistical_inefficiency_RCA(
     interface_type: str,
     residue: str,
     sl: int,
-    chunk_length: float,
+    max_block_length: float,
     begin_time: float,
     time: float,
     timestep: float,
-    max_block_length: float,
+    chunk_length: float = 1000,
     units: str = "ps",
+    reverse: bool = False,
     display: bool = True,
 ):
     """
-    Calculate the statistical inefficiency of the trajectory as a function of block length
-    using RCA method.
+    Calculate the statistical inefficiency of the trajectory as a function of block length.
 
     Parameters
     ----------
@@ -78,7 +79,7 @@ def get_statistical_inefficiency_RCA(
 
     # Calculate all density profiles
     print("Calculating all density profiles")
-    axises, denses = get_each_density_profiles(
+    axises, denses = get_each_density_profile(
         trajectory_file=trajectory_file,
         topology_file=topology_file,
         residue=residue,
@@ -102,10 +103,11 @@ def get_statistical_inefficiency_RCA(
         angles[i] = np.rad2deg(best_i["theta"])
 
     # Invert to calculate blocks in reverse order
-    angles = np.flip(angles)
+    if reverse:
+        angles = np.flip(angles)
 
-    # Compute variance, mean, and length
-    v = np.var(angles)
+    # Compute variance and mean
+    v = np.var(angles, ddof=1)
     m = np.mean(angles)
 
     # Pre-allocate arrays
@@ -115,101 +117,63 @@ def get_statistical_inefficiency_RCA(
     # Calculate the scaled variance for each block length
     for t in range(2, max_block_length):
         nblocks = L * tau // t
-        if nblocks > 0:
+        if nblocks > 1:
             xg = np.split(angles[: nblocks * t], nblocks)
             block_means = np.array([np.mean(block) for block in xg])
-            v2 = np.sum((block_means - m) ** 2) / nblocks
+            v2 = np.sum((block_means - m) ** 2) / (nblocks - 1)
             si[t - 2] = t * v2 / v
-            block_sizes[t - 2] = nblocks
+            block_sizes[t - 2] = t
         else:
             break
 
     return block_sizes, si
 
 
-def get_each_density_profiles(
-    trajectory_file: str,
-    topology_file: str,
-    residue: str,
-    sl: int,
-    chunk_length: float,
-    begin_time: float,
-    time: float,
-    timestep: float,
-    units: str = "ps",
-):
-    """
-    Calculate all density profiles for given trajectory and topology files.
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
 
-    Parameters
-    ----------
-    trajectory_file : str
-        Path to the GROMACS trajectory (.xtc) file.
-    topology_file : str
-        Path to the GROMACS topology (.gro) file.
-    residue : str
-        Residue type of the droplet.
-    sl : int
-        Number of slices to divide the pore into.
-    chunk_length : float
-        Length of the chunk for dynamic load of trajectory.
-    begin_time : float
-        Starting time for calculations.
-    time : float
-        Total time of the simulation.
-    timestep : float
-        Time step of the simulation.
-    units : str, optional
-        Units of time in the simulation. Default is 'ps'.
+    parser.add_argument("--trajectory_file", type=str, help="Path to the GROMACS trajectory (.xtc) file.")
+    parser.add_argument("--topology_file", type=str, help="Path to the GROMACS topology (.gro) file.")
+    parser.add_argument("--output_file", type=str, help="Path to the output file where results will be saved.")
+    parser.add_argument("--rho_bulk", type=float, help="Bulk density of the droplet.")
+    parser.add_argument("--l", type=float, help="Ratio of pore length to pore height.")
+    parser.add_argument("--phi", type=float, help="Volume fraction of the droplet.")
+    parser.add_argument("--H", type=float, help="Height of the pore.")
+    parser.add_argument("--interface_type", type=str, help="Type of surface to use in approximation, e.g., 'roll'.")
+    parser.add_argument("--residue", type=str, help="Residue type of the droplet.")
+    parser.add_argument("--sl", type=int, help="Number of slices to divide the pore into.")
+    parser.add_argument("--max_block_length", type=int, help="Maximum block length to calculate the statistical inefficiency.")
+    parser.add_argument("--begin_time", type=float, help="Starting time for calculations.")
+    parser.add_argument("--time", type=float, help="Total time of the simulation.")
+    parser.add_argument("--timestep", type=float, help="Time step of the simulation.")
+    parser.add_argument("--chunk_length", type=float, default=1000, help="Length of the chunk for dynamic load of trajectory (default: 1000).")
+    parser.add_argument("--units", type=str, default="ps", choices=["ps", "ns"], help="Units of time in the simulation (default: 'ps').")
+    parser.add_argument("--reverse", type=str2bool, default=False, help="If True, process trajectory in reverse order (default: False).")
+    parser.add_argument("--display", type=str2bool, default=True, help="If True, display optimization details (default: True).")
 
-    Returns
-    -------
-    axises : np.ndarray
-        Array of axises of the profiles.
-    denses : np.ndarray
-        Array of density profiles.
-    """
+    args = parser.parse_args()
 
-    # Validate inputs and initialize variables
-    assert residue in ["DECAN"], "This residue type is not available"
-    assert units.lower() in ["ns", "ps"], "Wrong units"
-    u = 1000 if units.lower() == "ns" else 1
-
-    # Calculate the number of frames and chunks
-    N = int(time * u) // int(timestep * u) + 1
-    L = int((time - begin_time) * u) // int(chunk_length * u)
-    tau = int(chunk_length * u) // int(timestep * u)
-    start_frame = N - tau * L
-
-    # Pre-allocate arrays for results
-    axises = np.empty((L * tau, sl))
-    denses = np.empty((L * tau, sl))
-
-    # Iterate over trajectory chunks
-    chunk_iter = md.iterload(
-        trajectory_file, top=topology_file, chunk=tau, skip=start_frame
+    block_sizes, si = get_statistical_inefficiency(
+        trajectory_file=args.trajectory_file,
+        topology_file=args.topology_file,
+        rho_bulk=args.rho_bulk,
+        l=args.l,
+        phi=args.phi,
+        H=args.H,
+        interface_type=args.interface_type,
+        residue=args.residue,
+        sl=args.sl,
+        max_block_length=args.max_block_length,
+        begin_time=args.begin_time,
+        time=args.time,
+        timestep=args.timestep,
+        chunk_length=args.chunk_length,
+        units=args.units,
+        reverse=args.reverse,
+        display=args.display,
     )
-    for chunk_idx, chunk in enumerate(tqdm(chunk_iter, total=L, desc="Chunk:")):
-        assert (
-            int(timestep) == int(chunk.timestep)
-        ), f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
 
-        # Select residue positions and apply periodic boundary conditions
-        residue_mask = chunk.top.select(f"resname {residue}")
-        positions = chunk.xyz[:, residue_mask, :]
-        box = chunk.unitcell_lengths[:, np.newaxis, :]
-
-        center = get_center_pbc(positions, box)
-        positions -= center
-        positions += box / 2
-        positions = apply_pbc(positions, box)
-
-        # Calculate density profiles for each frame
-        for i in range(tau):
-            axis_i, dens_i = get_numerical_density_profile(
-                positions[i, :, :], box[i, :, :], sl, center=True
-            )
-            axises[chunk_idx * tau + i] = axis_i
-            denses[chunk_idx * tau + i] = dens_i
-
-    return axises, denses
+    # Write results to the output file using numpy
+    output_data = np.column_stack((block_sizes, si))
+    header = "Block Sizes\tStatistical Inefficiencies"
+    np.savetxt(args.output_file, output_data, delimiter="\t", header=header, comments="")

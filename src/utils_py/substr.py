@@ -49,7 +49,7 @@ def base62_encode(num, length=4):
 
 
 def generate_substrate(
-    unitcell_path: str, Lx: float, Ly: float, Lz: float, freeze_substr: bool = False
+    unitcell_path: str, Lx: float, Ly: float, Lz: float, freeze_substr: bool = False, build: bool = True
 ):
     """
     Generate a substrate from a given unitcell.
@@ -77,7 +77,9 @@ def generate_substrate(
     unitcell = read_gro(unitcell_path)
     unitcell_box = unitcell.box
 
-    Nx, Ny, Nz = np.clip(np.array([Lx, Ly, Lz]) / unitcell_box[:3], 1, None).astype(int)
+    Nx, Ny, Nz = np.round(
+        np.clip(np.array([Lx, Ly, Lz]) / unitcell_box[:3], 1, None)
+    ).astype(int)
     N = Nx * Ny * Nz
     N_atoms = len(unitcell.atoms)
     ex, ey, ez = get_box_vectors(unitcell_box)
@@ -89,7 +91,7 @@ def generate_substrate(
         atoms_xyz=np.zeros((N * N_atoms, 3)),
     )
 
-    print("Possible substrate size {:.1f}x{:.1f}x{:.1f}".format(*structure.box))
+    print("Possible substrate size {:.1f}x{:.1f}x{:.1f} ({}x{}x{})".format(*structure.box, Nx, Ny, Nz))
 
     # Naming variables
     folder, unitcell_filename = os.path.split(unitcell_path)
@@ -98,9 +100,12 @@ def generate_substrate(
     output_name = f"{filename}_{Nx}x{Ny}x{Nz}.gro"
     output_path = os.path.join(folder, "gro", output_name)
 
-    # if os.path.isfile(output_path):
-    #     print(f"Such substrate already exist! Please check `{folder}/gro`")
-    #     return output_name
+    if not build:
+        if os.path.isfile(output_path):
+            print(f"A ready-made substrate is used from `{folder}/gro`")
+            return output_name
+        else:
+            print(f"A substrate with this size does not exist. Forcibly generating it....")
 
     # Replicate unitcell
     for i in range(Nx):
@@ -148,7 +153,7 @@ def get_box_vectors(box: np.array):
     return ex, ey, ez
 
 
-def generate_calcite_itp(substr_path: str):
+def generate_calcite_itp(substr_path: str, build: bool = True):
     """
     Generate .itp file for a substrate, based on the .gro file.
 
@@ -174,9 +179,12 @@ def generate_calcite_itp(substr_path: str):
     filename = "_".join(substr_name.split("_")[:-1])
     output_path = os.path.join(folder, "itp", output_name)
 
-    # if os.path.isfile(output_path):
-    #     print(f"Itp for substrate already exist! Please check `{folder}/itp`")
-    #     return output_name
+    if not build:
+        if os.path.isfile(output_path):
+            print(f"A ready-made itp for substrate is used from `{folder}/itp`")
+            return output_name
+        else:
+            print(f"The itp does not exist for this substrate size. Forcibly generating it....")
 
     neigh_dict = get_calcite_neighbors_list_numpy(substr)
 
@@ -246,7 +254,7 @@ def generate_calcite_itp(substr_path: str):
         )
 
     # Writing final itp file
-    with open(os.path.join(folder, "itp", substr_name + ".itp"), "w") as f:
+    with open(output_path, "w") as f:
         f.write(final_text)
 
     return output_name
@@ -371,7 +379,7 @@ def get_calcite_neighbors_list_numpy(substr: Structure):
         O_neigh = list(oxygen_real_ids[neigh_oxygen])
 
         # Ensure exactly 3 neighboring oxygen atoms are found
-        assert len(O_neigh) != 3, f"Incorrect number of neighbours ({len(O_neigh)})!!!"
+        assert len(O_neigh) == 3, f"Incorrect number of neighbours ({len(O_neigh)})!!!"
 
         # Store the neighbors in the dictionary
         neigh_dict[i] = O_neigh.copy()

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Define block lengths for each sc configuration
+declare -A block_lengths
+block_lengths=( [1.5]=2000 [1.6]=2000 [1.7]=2000 [1.8]=2000 [1.9]=2000 [2.0]=2000 [2.1]=2000 [2.2]=2000 [2.3]=2000 [2.4]=2000 [2.5]=2500 )
+
+# Loop over sc configurations
+for sc in 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5; do
+    # Get block length for the current sc
+    block_length=${block_lengths[$sc]}
+
+    # Determine the output directory and file
+    folder="/home/fluffymelon/PANDA_exp/scaling/production/calcite_decane_tip4p_sc_${sc}_offset_0.2"
+    output_file="$folder/angles_block_length_${block_length}.txt"
+
+    # Run the Python script with the specified arguments
+    python3 ~/PANDA/src/utils_py/angles_block.py \
+        --trajectory_file "$folder/cal_dec_tip4p.xtc" \
+        --topology_file "$folder/cal_dec_tip4p.gro" \
+        --rho_bulk 30.896 \
+        --l 2.000444 \
+        --phi 0.5 \
+        --H 9 \
+        --interface_type "roll" \
+        --residue "DECAN" \
+        --sl 200 \
+        --block_length "$block_length" \
+        --begin_time 0 \
+        --time 40000 \
+        --timestep 2 \
+        --units "ps" \
+        --display False \
+        --output_file "$output_file" &
+done
+wait

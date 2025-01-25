@@ -1,10 +1,44 @@
 import numpy as np
 import sys
 
-sys.path.append("..")  # Avoid error with importing of src
+# sys.path.append("..")  # Avoid error with importing of src
+# print(sys.path)
 from src.utils_py.io.gro import read_gro
 import src.utils_py.auxil
+# print("In module products sys.path[0], __package__ ==", sys.path[0], __package__)
+# from .io.gro import read_gro
+# import auxil
 from scipy.optimize import minimize, Bounds
+
+
+def L1(x, z, dens, l, phi, rho_func, grad_rho_func=None):
+    """
+    Function to minimize for finding the best angles theta and delta.
+
+    Parameters:
+        x (list): List of parameters to optimize, [theta, delta].
+
+    Returns:
+        float: Sum of absolute differences between the calculated and the experimental densities.
+    """
+    return np.sum(
+        np.abs(rho_func(z, l, phi, *x) - dens)
+    )
+
+def grad_L1(x, z, dens, l, phi, rho_func, grad_rho_func):
+    """
+    Gradient of a function to minimize for finding the best angles theta and delta.
+
+    Parameters:
+        x (list): List of parameters to optimize, [theta, delta].
+
+    Returns:
+        float: Sum of absolute differences between the calculated and the experimental densities.
+    """
+    return np.sum(
+        np.sign(rho_func(z, l, phi, *x) - dens) * grad_rho_func(z, l, phi, *x),
+        axis=1
+    )
 
 
 def profile_approx(
@@ -148,6 +182,10 @@ def _profile_approx_alpha_from_array(
     phi: float,
     H: float,
     interface_type: str,
+    samples: int = 3,
+    method="L-BFGS-B",
+    x0: tuple = (3 * np.pi / 4, 0.1),
+    callback=None,
     display: bool = True,
 ) -> tuple[np.array, np.array, dict]:
     """
@@ -170,8 +208,20 @@ def _profile_approx_alpha_from_array(
     dens = dens.copy() / rho_bulk  # Normalize the density profile
     z = z.copy() / H  # Normalize the z-coordinates
 
-    left = np.argmax(z > -0.5) - 1  # Find the left boundary of the droplet
-    right = np.argmax(z[::-1] < 0.5)  # Find the right boundary of the droplet
+    left = np.argmax(z > -0.5) - 1 # Find the left boundary of the droplet
+    right = np.argmin(z < 0.5)  # Find the right boundary of the droplet
+    # left, right = 0, len(z)
+    # # Find left none zero bin
+    # for i in range(len(z)):
+    #     if z[i] > -0.5:
+    #         left = i - 1
+    #         break
+
+    # # Find right none zero bin
+    # for i in range(len(z) - 1, -1, -1):
+    #     if z[i] < 0.5:
+    #         right = i + 1
+    #         break
 
     # Create a function based on the surface type
     assert (
@@ -179,33 +229,55 @@ def _profile_approx_alpha_from_array(
         in ["droplet", "doughnut", "worm", "roll", "perforation", "layer"]
     ), "There is no such type of surface. Could be droplet, doughnut, worm, roll, perforation or layer"
     rho_alpha = getattr(src.utils_py.auxil, f"rho_{interface_type.lower()}_alpha")
-
-    def L1(x):
-        """
-        Function to minimize for finding the best angles theta and delta.
-
-        Parameters:
-            x (list): List of parameters to optimize, [theta, delta].
-
-        Returns:
-            float: Sum of absolute differences between the calculated and the experimental densities.
-        """
-        return np.sum(
-            np.abs(rho_alpha(z[left:right], l, phi, x[0], x[1]) - dens[left:right])
-        )
+    grad_rho_alpha = getattr(src.utils_py.auxil, f"grad_rho_{interface_type.lower()}_alpha")
 
     # Minimization process
-    x0 = [3 * np.pi / 4, 0]  # Initial guess for theta and delta
-    res = minimize(
-        L1,
-        x0,
-        method="Nelder-Mead",
-        bounds=((np.pi / 2, np.pi), (0, 0.5)),
-        options={"disp": display},
-    )
-    best = {"theta": res.x[0], "delta": res.x[1]}  # Best-fit parameters
+    # x0 = [3 * np.pi / 4, 0.1]  # Initial guess for theta and delta
+    # res = minimize(
+    #     L1,
+    #     x0,
+    #     (z[left:right], dens[left:right], l, phi),
+    #     method="L-BFGS-B",
+    #     bounds=((np.pi / 2 + 0.01, np.pi), (0, 0.49)),
+    #     options={"disp": display},
+    # )
+    # best = {"theta": res.x[0], "delta": res.x[1]}  # Best-fit parameters
 
-    return z, dens, best
+    # return z, dens, best
+
+    # Initial guess for theta and delta
+    if samples == 1:
+        theta0 = x0[0]
+        delta0 = x0[1]
+    else:
+        theta0 = np.linspace(np.pi / 2 + 0.02, np.pi, samples)
+        delta0 = np.linspace(0, 0.2, samples)
+
+    grid1, grid2 = np.meshgrid(theta0, delta0)
+    x0_mesh = np.column_stack((grid1.ravel(), grid2.ravel()))
+
+    min_best = {"theta": np.pi, "delta": 0, "fun": np.inf}
+    for x0i in x0_mesh:
+        print(x0i)
+        res = minimize(
+            L1,
+            # x0i,
+            (x0[0], x0[1]),
+            method=method,
+            jac=grad_L1,
+            bounds=((np.pi / 2 + 0.01, np.pi), (0, 0.49)),
+            args=(z[left:right], dens[left:right], l, phi, rho_alpha, grad_rho_alpha),
+            options={"disp": display},
+            callback=callback
+        )
+
+        best = {"theta": res.x[0], "delta": res.x[1], "fun": res.fun}  # Best-fit parameters
+
+        if best["fun"] < min_best["fun"]:
+            min_best = best
+
+
+    return z, dens, min_best
 
 
 def profile_approx_modified(

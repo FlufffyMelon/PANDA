@@ -1,4 +1,4 @@
-/.DS_Store
+**/.DS_Store
 /.venv
 /.vscode
 /synthetic_delta/
@@ -9,3 +9,9 @@
 /src/utils_cpp/mixer
 /systems/
 /data/
+**/__pycache__/
+**/.ipynb_checkpoints/
+/src/PANDA.egg-info
+substrates/calcite/gro
+substrates/calcite/itp
+**/slurm*
