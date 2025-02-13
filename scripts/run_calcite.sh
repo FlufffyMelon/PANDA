@@ -5,7 +5,7 @@
 --Lx 20 \
 --Ly 5 \
 --Lz 4 \
---offset 0.5 \
+--offset 0.2 \
 --unitcell substrates/calcite/calcite_104_unitcell.gro \
 --freeze_substr false \
 --scale 2.5 \

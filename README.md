@@ -1,48 +1,92 @@
 # PANDA – Predicting Angle from Nanoscale Density Analysis
 
-![Logo](logo.png)
+## Overview
 
-This repository provides tools for calculating the contact angle of a droplet using a one-dimensional density profile. The code requires several input files generated with GROMACS. Below is an overview of the process and the necessary files.
+This repository provides tools for calculating the contact angle of a droplet using a one-dimensional density profile.
 
 ## Requirements
 
 ### Input Files
 
-To perform the contact angle calculations, the following GROMACS-generated files are needed:
+To perform the contact angle calculations, you need to create a virtual Python environment. This can be done by running the following commands in your terminal:
 
-- .gro - A GROMACS structure file containing the molecular coordinates and box dimensions of the system **after** simulation.
-- .xtc - A trajectory file containing the time evolution of the system's coordinates. This file is essential for density profile calculations across different time steps.
-- .tpr - A portable binary run file that contains all information about the simulation (topology, parameters, etc.), which allows GROMACS to analyze the trajectory properly.
-
-### Example GROMACS Density Profile Command
-
-To calculate the density profile, use the built-in `gmx density` command. Below is an example command to compute the density profile along the z-axis:
-```
-gmx density -s *topology*.tpr -f *trajectory*.xtc -o *density_profile*.xvg -sl 200 -d Z -b *initial_time*
+```bash
+python -m venv ./.venv  # Create virtual environment
+source .venv/bin/activate  # Activate virtual environment
 ```
 
-Here:
-- -s specifies the input topology (`.tpr`) file.
-- -f specifies the input trajectory (`.xtc`) file.
-- -o specifies the output file for the density profile data in .xvg format.
-- -sl 200 sets the number of slices to 200 along the chosen axis (for better spatial resolution).
-- -d Z indicates that the density profile is calculated along the z-axis.
-- -b sets the starting time (in ps) for analysis, allowing you to exclude the initial equilibration phase from the calculation. In practice, it is worth choosing this time so that averaging over the last 5 ns or ~2500 frames is performed.
+You'll also need to install the dependencies listed in `requirements.txt` using pip:
+```bash
+pip install -r requirements.txt
+```
 
+### Building the System
 
-## Contact Angle Calculation
+The C++ code for building the system is located in the `src/utils_cpp` directory. To compile the code, run the following command:
 
-Two methods are available for calculating the contact angle of the droplet:
+```bash
+make  # Compile C++ code
+```
 
-- `profile_approx`: Standard method for calculating contact angle from one-dimensional density profile based on the algorithm presented in the original paper
-- `profile_approx_modified`: An enhanced version of profile_approx that incorporates calculation of pore parameters from the molecular coordinatese and the addition of another hyperparameter – offset, resulting in a more accurate result when calculating the angle
+After compiling the code, you can execute python script to build the system:
 
-The choice of method depends on the purpose. The first method is verified and has been published in a journal. However, due to the non-ideal model, the contact angle value may not be accurate. The second method was developed empirically and does not fit the idea of the whole project. However, until general formulas are derived that take into account the non-zero wetting layer, this algorithm is more accurate. Later, after further research, the second method will be retracted
+```bash
+.venv/bin/python py/cal_script.py \
+--H 9 \
+--phi 0.5 \
+--build false \
+--Lx 20 \
+--Ly 5 \
+--Lz 4 \
+--offset 0.2 \
+--unitcell substrates/calcite/calcite_104_unitcell.gro \
+--freeze_substr false \
+--scale 2.5 \
+--exp_folder calcite_decane_tip4p \
+--system_name cal_dec_tip4p \
+--gpu_id 0 \
+--n_mpi 8 \
+--init_core 0 \
+--node 3 \
+--server_folder PANDA_exp/example \
+--ansambel nvt \
+--nsteps 20000000 \
+--temp 300
+```
 
-## Examples
+or simply execute the bash script
 
-In the examples folder, you will find a Jupyter Notebook demonstrating a complete pipeline for contact angle calculations. The notebook includes:
+```bash
+./scripts/run_calcite.sh  # Run bash script to build system
+```
 
-1. Examples of typical constants that are used in calculations.
-2. Using two provided methods to calculate the contact angle.
-3. Example of density profile visualization and its approximation.
+Python script has number of arguments. Here's a brief description of each argument:
+
+*   `--H`: Specify the height of the pore (default=10)
+*   `--phi`: Specify the volume fraction of non-wetting compount (in this case decane) (default=0.5)
+*   `--build`: Specify whether to build the system (default=true)
+*   `--Lx`, `--Ly`, `--Lz`: Specify the dimensions of the simulation box
+*   `--offset`: Specify the offset value for non-wetting fraction region (default=0.2)
+*   `--unitcell`: Specify the unit cell file for the substrate
+*   `--freeze_substr`: Specify whether to freeze the substrate (default=false)
+*   `--scale`: Specify the scaling factor for calcite-decane interaction
+*   `--exp_folder`: Specify the folder where the simulation results will be saved
+*   `--system_name`: Specify the name of the system being simulated
+*   `--gpu_id`: Specify the GPU ID to use for the simulation (default=0)
+*   `--n_mpi`, `--init_core`, `--node`: Specify the number of MPI processes, initial core, and node id for the simulation
+*   `--server_folder`: Specify the folder on the server, where configuration folder will be copy
+*   `--ansambel`: Specify the ansamble type for the simulation (default=nvt)
+*   `--nsteps`: Specify the total number of steps in the simulation (default=1000000)
+
+### Running the Simulation
+
+After running the bash script, you need to execute the sbatch script from the directory where the system was saved **on the server**:
+
+```bash
+sbatch run.sh  # Run sbatch script to execute simulation
+```
+
+### Analyzing Results
+
+The results of the simulation can be analyzed using the Jupyter Notebook `example.ipynb` in the `examples` folder.
+

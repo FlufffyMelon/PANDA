@@ -4,11 +4,11 @@ import numpy as np
 import argparse
 
 from src.utils_py.assembler.build import build_system
-from src.utils_py.geom.Droplet import Droplet
-from src.utils_py.geom.Doughnut import Doughnut
-from src.utils_py.geom.Worm import Worm
-from src.utils_py.geom.Roll import Roll
-from src.utils_py.geom.Perforation import Perforation
+from utils_py.geom.interface_geom.Droplet import Droplet
+from utils_py.geom.interface_geom.Doughnut import Doughnut
+from utils_py.geom.interface_geom.Worm import Worm
+from utils_py.geom.interface_geom.Roll import Roll
+from utils_py.geom.interface_geom.Perforation import Perforation
 from src.utils_py.gro.Structure import Structure
 from src.utils_py.io.gro import read_gro, write_gro
 

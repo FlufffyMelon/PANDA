@@ -90,9 +90,9 @@ def get_each_density_profile(
         trajectory_file, top=topology_file, chunk=tau, skip=start_frame
     )
     for chunk_idx, chunk in enumerate(tqdm(chunk_iter, total=L, desc="Chunk")):
-        assert (
-            int(timestep) == int(chunk.timestep)
-        ), f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
+        assert int(timestep) == int(chunk.timestep), (
+            f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
+        )
 
         # Select residue positions and apply periodic boundary conditions
         residue_mask = chunk.top.select(f"resname {residue}")
@@ -145,9 +145,9 @@ def apply_pbc(positions: np.array, box: np.array):
 
 
 def validate_positions(positions: np.array):
-    assert (
-        (len(positions.shape) == 2) or (len(positions.shape) == 3)
-    ), f"The array of positions must be either two or three dimensional. Now {len(positions.shape)}"
+    assert (len(positions.shape) == 2) or (len(positions.shape) == 3), (
+        f"The array of positions must be either two or three dimensional. Now {len(positions.shape)}"
+    )
 
     if len(positions.shape) == 2:
         positions = positions[np.newaxis, :, :]
@@ -156,9 +156,9 @@ def validate_positions(positions: np.array):
 
 
 def validate_box(box: np.array):
-    assert (
-        (len(box.shape) == 1) or (len(box.shape) == 2) or (len(box.shape) == 3)
-    ), f"The box array must be either one or two dimensional. Now {len(box.shape)}"
+    assert (len(box.shape) == 1) or (len(box.shape) == 2) or (len(box.shape) == 3), (
+        f"The box array must be either one or two dimensional. Now {len(box.shape)}"
+    )
 
     if len(box.shape) == 1:
         box = box[np.newaxis, np.newaxis, :]
@@ -174,17 +174,19 @@ def validate_positions_and_box(positions: np.array, box: np.array):
     positions = validate_positions(positions)
     box = validate_box(box)
 
-    assert (
-        box.shape[0] == positions.shape[0]
-    ), f"Lenghts of box and positions arrays are not the same. Box {box.shape[0]}, when Positions {positions.shape[0]}"
+    assert box.shape[0] == positions.shape[0], (
+        f"Lenghts of box and positions arrays are not the same. Box {box.shape[0]}, when Positions {positions.shape[0]}"
+    )
 
     return positions, box
+
 
 def validate_list_and_array(array: Union[list, np.array]):
     if isinstance(array, list):
         return np.array(array)
     elif isinstance(array, np.ndarray):
         return array
+
 
 def str2bool(s: str) -> bool:
     """Helper function to support boolean command line arguments."""
