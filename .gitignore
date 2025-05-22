@@ -51,3 +51,6 @@ data/
 substrates/calcite/gro
 substrates/calcite/itp
 slurm*
+
+# New rule for .npy files
+*.npy
