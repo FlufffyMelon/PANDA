@@ -3,8 +3,8 @@ import sys
 
 # sys.path.append("..")  # Avoid error with importing of src
 # print(sys.path)
-from src.utils_py.io.gro import read_gro
-import src.utils_py.interface
+from .io.gro import read_gro
+from . import interface
 
 # print("In module products sys.path[0], __package__ ==", sys.path[0], __package__)
 # from .io.gro import read_gro
@@ -86,7 +86,7 @@ def profile_approx(
     z, dens = np.loadtxt(dens_profile_file, comments=["@", "#"], unpack=True)
 
     # Call the function to approximate the density profile
-    return _profile_approx_from_array(
+    return profile_approx_from_array(
         dens,
         z,
         rho_bulk,
@@ -152,10 +152,10 @@ def profile_approx_from_array(
     )
 
     assert extention in ["theta", "delta", "alpha"]
-    rho = getattr(src.utils_py.interface, f"rho_{interface_type}_{extention}")
+    rho = getattr(interface, f"rho_{interface_type}_{extention}")
     try:
         grad_rho = getattr(
-            src.utils_py.interface, f"grad_rho_{interface_type}_{extention}"
+            interface, f"grad_rho_{interface_type}_{extention}"
         )
     except AttributeError:
         # print("Gradient function does not exist. Using numerical approximation")
@@ -319,7 +319,7 @@ def profile_approx_modified(
     ], (
         "There is no such type of surface. Could be droplet, doughnut, worm, roll, perforation or layer"
     )
-    rho_theta = getattr(src.utils_py.auxil, f"rho_{interface_type.lower()}_theta")
+    rho_theta = getattr(interface, f"rho_{interface_type.lower()}_theta")
 
     def L1(x, z, dens, l, phi):
         """

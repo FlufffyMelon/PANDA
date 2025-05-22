@@ -3,8 +3,8 @@ import sys
 import numpy as np
 from tqdm import tqdm
 
-from src.utils_py.assembler.insert import find_position, insert_point_into_shape
-from src.utils_py.io.gro import read_gro
+from .insert import find_position, insert_point_into_shape
+from ..io.gro import read_gro
 
 from .grid import add_mol_grid
 

@@ -4,8 +4,7 @@ from tqdm import tqdm
 import argparse
 import sys
 
-from profile_approx import _profile_approx_from_array
-from utils import get_numerical_density_profile, get_center_pbc, apply_pbc, str2bool
+from panda import profile_approx_from_array, get_numerical_density_profile, get_center_pbc, apply_pbc, str2bool
 
 def extract_density_profiles(
     trajectory_file: str,

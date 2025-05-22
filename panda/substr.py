@@ -4,8 +4,8 @@ import os
 import sys
 
 sys.path.append("..")  # Avoid error with importing of src
-from src.utils_py.io.gro import read_gro, write_gro
-from src.utils_py.gro.Structure import Structure
+from .io.gro import read_gro, write_gro
+from .gro.Structure import Structure
 
 from tqdm import tqdm
 from itertools import combinations

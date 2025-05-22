@@ -4,8 +4,7 @@ from tqdm import tqdm
 import argparse
 import sys
 
-from profile_approx import _profile_approx_alpha_from_array
-from utils import get_numerical_density_profile, get_center_pbc, apply_pbc, str2bool
+from panda import profile_approx_from_array, get_numerical_density_profile, get_center_pbc, apply_pbc, str2bool
 
 def get_angle_delta_blocks(
     trajectory_file: str,
@@ -60,8 +59,8 @@ def get_angle_delta_blocks(
         positions = apply_pbc(positions, box)
 
         axis, dens = get_numerical_density_profile(positions, box, sl, center=True)
-        _, _, best_i = _profile_approx_alpha_from_array(
-            dens, axis, rho_bulk, l, phi, H, interface_type, samples, display
+        _, _, best_i = profile_approx_from_array(
+            dens, axis, rho_bulk, l, phi, H, interface_type, extention='alpha', samples=samples, display=display
         )
 
         t[chunk_idx] = chunk.time[-1]

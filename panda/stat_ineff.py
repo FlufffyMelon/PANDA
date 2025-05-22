@@ -3,8 +3,7 @@ import argparse
 import sys
 from tqdm import tqdm
 
-from profile_approx import _profile_approx_alpha_from_array
-from utils import get_each_density_profile, str2bool
+from panda import profile_approx_from_array, get_each_density_profile, str2bool
 
 
 def get_statistical_inefficiency(
@@ -96,8 +95,8 @@ def get_statistical_inefficiency(
     assert len(denses) == L * tau, "Length of denses array does not match with L * tau"
     angles = np.zeros(L * tau)
     for i in tqdm(range(L * tau)):
-        _, _, best_i = _profile_approx_alpha_from_array(
-            denses[i, :], axises[i, :], rho_bulk, l, phi, H, interface_type, display
+        _, _, best_i = profile_approx_from_array(
+            denses[i, :], axises[i, :], rho_bulk, l, phi, H, interface_type, extention='alpha', display=display
         )
 
         angles[i] = np.rad2deg(best_i["theta"])
