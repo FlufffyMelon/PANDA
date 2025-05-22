@@ -9,7 +9,7 @@
 --unitcell substrates/calcite/calcite_104_unitcell.gro \
 --freeze_substr false \
 --scale 2.5 \
---exp_folder calcite_decane_tip4p_sc_2.5_offset \
+--exp_folder test \
 --system_name cal_dec_tip4p \
 --gpu_id 1 \
 --n_mpi 8 \

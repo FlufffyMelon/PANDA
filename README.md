@@ -90,3 +90,28 @@ sbatch run.sh  # Run sbatch script to execute simulation
 
 The results of the simulation can be analyzed using the Jupyter Notebook `example.ipynb` in the `examples` folder.
 
+# panda
+
+A scientific package for ... (describe your package here)
+
+## Installation
+
+You can install directly from git:
+
+```
+pip install git+<link to this repo>
+```
+
+## Usage
+
+```python
+import panda
+# use panda functions
+```
+
+## Structure
+- All code is in the `panda` folder.
+
+## License
+MIT
+

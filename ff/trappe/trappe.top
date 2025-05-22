@@ -18,6 +18,7 @@
 ; TraPPE
    CH2     14.027    0.000  A    5.81e-03    2.21e-05; CHX-[CH2]-CHX
    CH3     15.035    0.000  A    9.06e-03    2.52e-05; [CH3]-CHX
+    CH     13.019    0.000  A    4.27e-03    1.09e-05; CH-CH
 ; water (tip3p/tip4p2005)
    OWT    15.9994    0.000  A    3.09e-03    3.07e-06
    HWT     1.0080    0.000  A    0.00e+00    0.00e+00
@@ -61,6 +62,7 @@
   CH2  CH2       1    1.54e-01
   CH3  CH2       1    1.54e-01
   CH3  CH3       1    1.54e-01
+   CH   CH       1    1.40e-01
 
 [ angletypes ]
 ;   i    j    k    func     th0         cth
