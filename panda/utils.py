@@ -214,13 +214,19 @@ def block_average_density_profile(axises: np.ndarray, denses: np.ndarray, block_
     Returns
     -------
     axis_avg : np.ndarray
-        Block-averaged axis (shape: [sl,]).
+        Block-averaged axis (shape: [n_blocks, sl]).
     dens_avg : np.ndarray
-        Block-averaged density profile (shape: [sl,]).
+        Block-averaged density profile (shape: [n_blocks, sl]).
     """
-    n_blocks = axises.shape[0] // block_size
-    if n_blocks == 0:
+    blocks_num = axises.shape[0] // block_size
+    if blocks_num == 0:
         raise ValueError("Not enough profiles for the given block size.")
-    axis_avg = np.mean(axises[:n_blocks * block_size].reshape(n_blocks, block_size, -1), axis=(0, 1))
-    dens_avg = np.mean(denses[:n_blocks * block_size].reshape(n_blocks, block_size, -1), axis=(0, 1))
-    return axis_avg, dens_avg
+
+    mean_axises = np.zeros((blocks_num, axises.shape[1]))
+    mean_denses = np.zeros((blocks_num, denses.shape[1]))
+
+    for i in range(blocks_num):
+        mean_axises[i, :] = np.mean(axises[(i * block_size):((i+1) * block_size), :], axis=0)
+        mean_denses[i, :] = np.mean(denses[(i * block_size):((i + 1) * block_size), :], axis=0)
+
+    return mean_axises, mean_denses

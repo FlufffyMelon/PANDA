@@ -1,117 +1,88 @@
-# PANDA – Predicting Angle from Nanoscale Density Analysis
+![Logo](logo.png)
 
-## Overview
+# PANDA: Predicting Angle from Nanoscale Density Analysis
 
-This repository provides tools for calculating the contact angle of a droplet using a one-dimensional density profile.
+<p align="left">
+  <a href="https://doi.org/10.1016/j.colsurfa.2025.135994"><img alt="Journal" src="https://img.shields.io/badge/journal-Colloids%20%26%20Surfaces%20A-blue"></a>
+  <a href="https://doi.org/10.1016/j.colsurfa.2025.135994"><img alt="Article" src="https://img.shields.io/badge/article-Elsevier-green"></a>
+  <a href="https://img.shields.io/badge/license-MIT-brightgreen"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-brightgreen"></a>
+  <a href="https://img.shields.io/badge/python-%3E%3D3.8-blue"><img alt="Python >=3.8" src="https://img.shields.io/badge/python-%3E%3D3.8-blue"></a>
+</p>
 
-## Requirements
+**A Python package for calculating contact angles from molecular simulations using one-dimensional density profiles.**
 
-### Input Files
+## 🚀 Installation
 
-To perform the contact angle calculations, you need to create a virtual Python environment. This can be done by running the following commands in your terminal:
-
-```bash
-python -m venv ./.venv  # Create virtual environment
-source .venv/bin/activate  # Activate virtual environment
-```
-
-You'll also need to install the dependencies listed in `requirements.txt` using pip:
-```bash
-pip install -r requirements.txt
-```
-
-### Building the System
-
-The C++ code for building the system is located in the `src/utils_cpp` directory. To compile the code, run the following command:
+Install PANDA directly from GitHub:
 
 ```bash
-make  # Compile C++ code
+pip install git+https://github.com/FlufffyMelon/PANDA.git@main
 ```
 
-After compiling the code, you can execute python script to build the system:
+## 🧩 Basic Usage
 
-```bash
-.venv/bin/python py/cal_script.py \
---H 9 \
---phi 0.5 \
---build false \
---Lx 20 \
---Ly 5 \
---Lz 4 \
---offset 0.2 \
---unitcell substrates/calcite/calcite_104_unitcell.gro \
---freeze_substr false \
---scale 2.5 \
---exp_folder calcite_decane_tip4p \
---system_name cal_dec_tip4p \
---gpu_id 0 \
---n_mpi 8 \
---init_core 0 \
---node 3 \
---server_folder PANDA_exp/example \
---ansambel nvt \
---nsteps 20000000 \
---temp 300
-```
-
-or simply execute the bash script
-
-```bash
-./scripts/run_calcite.sh  # Run bash script to build system
-```
-
-Python script has number of arguments. Here's a brief description of each argument:
-
-*   `--H`: Specify the height of the pore (default=10)
-*   `--phi`: Specify the volume fraction of non-wetting compount (in this case decane) (default=0.5)
-*   `--build`: Specify whether to build the system (default=true)
-*   `--Lx`, `--Ly`, `--Lz`: Specify the dimensions of the simulation box
-*   `--offset`: Specify the offset value for non-wetting fraction region (default=0.2)
-*   `--unitcell`: Specify the unit cell file for the substrate
-*   `--freeze_substr`: Specify whether to freeze the substrate (default=false)
-*   `--scale`: Specify the scaling factor for calcite-decane interaction
-*   `--exp_folder`: Specify the folder where the simulation results will be saved
-*   `--system_name`: Specify the name of the system being simulated
-*   `--gpu_id`: Specify the GPU ID to use for the simulation (default=0)
-*   `--n_mpi`, `--init_core`, `--node`: Specify the number of MPI processes, initial core, and node id for the simulation
-*   `--server_folder`: Specify the folder on the server, where configuration folder will be copy
-*   `--ansambel`: Specify the ansamble type for the simulation (default=nvt)
-*   `--nsteps`: Specify the total number of steps in the simulation (default=1000000)
-
-### Running the Simulation
-
-After running the bash script, you need to execute the sbatch script from the directory where the system was saved **on the server**:
-
-```bash
-sbatch run.sh  # Run sbatch script to execute simulation
-```
-
-### Analyzing Results
-
-The results of the simulation can be analyzed using the Jupyter Notebook `example.ipynb` in the `examples` folder.
-
-# panda
-
-A scientific package for ... (describe your package here)
-
-## Installation
-
-You can install directly from git:
-
-```
-pip install git+<link to this repo>
-```
-
-## Usage
+Import PANDA and use its core functions:
 
 ```python
 import panda
-# use panda functions
 ```
 
-## Structure
-- All code is in the `panda` folder.
+### Main Functions
 
-## License
+- **`get_each_density_profile()`**
+  Extracts the density profile for each frame of a molecular dynamics trajectory (currently only XTC format is supported).
+  **Typical usage:**
+  ```python
+  axises, denses = panda.get_each_density_profile(
+      trajectory_file, topology_file, residue, sl, chunk_length,
+      begin_time, time, timestep, units
+  )
+  ```
+
+- **`block_average_density_profile()`**
+  Computes block-averaged density profiles to reduce noise and improve statistical reliability.
+  **Typical usage:**
+  ```python
+  axises_avg, denses_avg = panda.block_average_density_profile(axises, denses, block_length)
+  ```
+
+- **`profile_approx_from_array()`**
+  Fits a density profile and extracts the contact angle and other parameters.
+  **Typical usage:**
+  ```python
+  axis_fit, dens_fit, result = panda.profile_approx_from_array(
+      denses_avg, axises_avg, rho_bulk, l, phi, H,
+      interface_type=interface_type, display=False
+  )
+  angle_deg = np.rad2deg(result['theta'])
+  ```
+
+## 📒 Examples
+
+See the [`examples/calcite_decane_contact_angle.ipynb`](examples/calcite_decane_contact_angle.ipynb) Jupyter notebook, which demonstrates the full PANDA workflow, including:
+- Density profile extraction
+- Block averaging
+- Contact angle calculation
+
+## 📖 Reference
+
+If you use PANDA in your research, please cite:
+
+[**Semenchuk, A. A., N. D. Kondratyuk, and I. V. Kopanichuk. "PANDA: Predicting angle from nanoscale density analysis." Colloids and Surfaces A: Physicochemical and Engineering Aspects 708 (2025): 135994.**](https://doi.org/10.1016/j.colsurfa.2025.135994)
+
+**BibTeX:**
+```bibtex
+@article{semenchuk2025panda,
+  title={PANDA: Predicting angle from nanoscale density analysis},
+  author={Semenchuk, AA and Kondratyuk, ND and Kopanichuk, IV},
+  journal={Colloids and Surfaces A: Physicochemical and Engineering Aspects},
+  volume={708},
+  pages={135994},
+  year={2025},
+  publisher={Elsevier}
+}
+```
+
+## 📝 License
 MIT
 

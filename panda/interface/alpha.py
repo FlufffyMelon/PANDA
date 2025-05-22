@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import pi, cos, sin, tan, sqrt, cbrt, abs, arcsin
 
-BIG_NUM = np.Inf
+BIG_NUM = np.inf
 
 
 """ Droplet """
@@ -61,7 +61,7 @@ def grad_rho_droplet_alpha(z, l, phi, th, delta, center=True):
 """ Doughnut """
 
 # General formulas in case of arbitrary theta and delta
-"""
+r"""
 d_{dou} = \frac{1}{4} \sqrt{\frac{(\pi-2\theta)^2}{\cos ^4 \theta }-\frac{12 - 4(\pi -2 \theta) \tan (\theta)}{\cos ^2 \theta} + \frac{64 \phi l^2}{\pi} + \frac{4}{3}} -\frac{\tan \theta}{2}+\frac{1}{4} \frac{\pi -2 \theta} {\cos ^2 \theta },
 """
 
@@ -89,7 +89,7 @@ def phi_min_doughnut_alpha(l, th, delta):
     return a * (b - c)
 
 
-"""
+r"""
 \phi_{max}=\frac{\pi\left(1-2\delta\right)}{16l^{2}}\left[(1-2\delta)^{2}\tan^{2}(\theta)-\frac{2(1-2\delta)^{2}(\pi-2\theta)}{\cos(\theta)^{3}}-\frac{\left(1-2\delta\right)^{2}}{3}+4l^{2}-4(1-2\delta)l\tan(\theta)+ \frac{(1-2\delta)(7(1-2\delta)-2(\pi-2\theta)l)}{\cos(\theta)^{2}}-\frac{4(1-2\delta)((1-2\delta)\tan(\theta)-2l)}{\cos(\theta)}\right]
 """
 

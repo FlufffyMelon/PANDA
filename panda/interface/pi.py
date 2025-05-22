@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import pi, cos, sin, tan, sqrt, cbrt, abs
 
-BIG_NUM = np.Inf
+BIG_NUM = np.inf
 
 """ Droplet """
 

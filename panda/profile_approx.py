@@ -3,7 +3,7 @@ import sys
 
 # sys.path.append("..")  # Avoid error with importing of src
 # print(sys.path)
-from .io.gro import read_gro
+# from .io.gro import read_gro
 from . import interface
 
 # print("In module products sys.path[0], __package__ ==", sys.path[0], __package__)
@@ -265,7 +265,7 @@ def profile_approx_modified(
         "The structure file must have the extension .gro"
     )
     # Read the structure file
-    structure = read_gro(structure_file)
+    # structure = read_gro(structure_file)
 
     # Ensure the density profile file has the correct extension
     assert dens_profile_file.endswith("xvg"), (
