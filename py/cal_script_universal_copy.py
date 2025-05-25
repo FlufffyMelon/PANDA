@@ -3,6 +3,7 @@ import argparse
 import os
 import importlib
 import json
+import mdtraj as md
 
 from panda.utils import str2bool
 
@@ -81,7 +82,6 @@ if not args.build:
     args.gen_substr = args.build
 
 # sys.path.append(args.HOME_DIR)  # Avoid error with importing of src
-from panda.io.gro import read_gro, write_gro  # noqa: E402
 from panda.geom.Box import Box  # noqa: E402
 from panda.geom.AntiBox import AntiBox  # noqa: E402
 from panda.geom.UnionShape import UnionShape  # noqa: E402
@@ -102,15 +102,15 @@ substr_name = generate_substrate(
 
 substr_folder, _ = os.path.split(args.unitcell)
 substr_path = os.path.join(substr_folder, "gro", substr_name)
-structure = read_gro(substr_path)
+traj = md.load(substr_path)
 
 # Generating itp for substrate if needed
 if not args.freeze_substr:
     substr_itp_name = generate_calcite_itp(substr_path, build=args.gen_substr)
 
-
-N = structure.atoms[-1].mol_id
-WIDTH_X, WIDTH_Y, HEIGHT = structure.box
+# Use mdtraj for box and coordinates
+N = traj.n_atoms  # This is not the same as mol_id, but we need to adapt logic
+WIDTH_X, WIDTH_Y, HEIGHT = traj.unitcell_lengths[0]
 H = args.H
 l = (WIDTH_X + WIDTH_Y) / 2 / H
 
@@ -124,8 +124,8 @@ package = 0.3
 distance = {"min": 0.08**2, "opt": 0.12**2}
 
 system_size = np.array([WIDTH_X, WIDTH_Y, HEIGHT + H])
-points = structure.atoms_xyz
-structure.box = system_size
+points = traj.xyz[0]
+traj.unitcell_lengths[0] = system_size
 
 names = ["decane", "tip4p"]
 density = [3.0896, 33.3277]  # nm-3
@@ -136,8 +136,8 @@ Interface = getattr(module, args.interface_type.title())
 
 # Check if this type of interface can exist unter this candition
 region = Interface(
-    structure.box / 2,
-    structure.box,
+    system_size / 2,
+    system_size,
     l,
     args.phi,
     theta=np.deg2rad(120),
@@ -241,9 +241,9 @@ numbers = list(
 
 # Building system
 if args.build:
-    structure = build_system(
+    traj = build_system(
         os.path.join(ff_path, "gro"),
-        structure,
+        traj,
         names,
         numbers,
         insert_shapes,
@@ -282,9 +282,7 @@ with open(os.path.join(exp_path, "system.itp"), "w") as f:
 
 if args.build:
     # Writing structure in gro fileformat
-    with open(os.path.join(exp_path, filename + ".gro"), "w") as f:
-        f.write(write_gro(structure))
-
+    traj.save(os.path.join(exp_path, filename + ".gro"))
     print("Mixing system")
     os.system(
         f"./{os.path.join(args.HOME_DIR, 'panda', 'utils_cpp', 'mixer')} -f {os.path.join(exp_path, filename + '.gro')} -o {os.path.join(exp_path, filename + '.gro')} -mn2 {distance['min']} -opt2 {distance['opt']}"

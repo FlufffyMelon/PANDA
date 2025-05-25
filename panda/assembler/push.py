@@ -2,11 +2,12 @@ import numpy as np
 from tqdm import tqdm
 from .pbc import distance_pbc2, delta_pbc
 
-def push_atoms_apart(structure, min_dist2, max_dist2, iteration_lim=10):
+
+def push_atoms_apart(xyz, box, mol_ids, min_dist2, max_dist2, iteration_lim=10):
     min_dist = np.sqrt(min_dist2)
     max_dist = np.sqrt(max_dist2)
 
-    new_structure = structure.copy()
+    new_xyz = xyz.copy()
     ins = 0
     overlap = True
     while overlap and (ins < iteration_lim):
@@ -15,18 +16,21 @@ def push_atoms_apart(structure, min_dist2, max_dist2, iteration_lim=10):
         ins += 1
 
         print(f"Iteration {ins}")
-        for i, atom in enumerate(tqdm(new_structure.atoms[:-1], desc='Atoms')):
-            for j, other_atom in enumerate(new_structure.atoms[i+1:]):
-                if atom.mol_id != other_atom.mol_id:
-                    delta = delta_pbc(atom.xyz, [other_atom.xyz], structure.box)[0]
-
+        for i in tqdm(range(len(new_xyz) - 1), desc="Atoms"):
+            for j in range(i + 1, len(new_xyz)):
+                if mol_ids[i] != mol_ids[j]:
+                    delta = delta_pbc(new_xyz[i], [new_xyz[j]], box)[0]
                     if np.all(abs(delta) < min_dist):
-                        # if distance_pbc2(atom.xyz, [other_atom.xyz], structure.box)[0] < min_dist2:
                         overlap = True
                         overlap_counter += 1
-                        other_atom.xyz += delta / np.linalg.norm(delta) * \
-                            np.random.uniform(min_dist, max_dist)
+                        new_xyz[j] += (
+                            delta
+                            / np.linalg.norm(delta)
+                            * np.random.uniform(min_dist, max_dist)
+                        )
 
         print(f"{overlap_counter} overlaps detected")
 
-    return new_structure.apply_pbc()
+    # Apply periodic boundary conditions
+    new_xyz = new_xyz % box
+    return new_xyz

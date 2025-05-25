@@ -1,4 +1,4 @@
-python py/cal_script_universal.py \
+python py/cal_script_universal_copy.py \
 --H 6 \
 --phi 0.3 \
 --build true \
@@ -6,7 +6,7 @@ python py/cal_script_universal.py \
 --Ly 12 \
 --Lz 4 \
 --offset 0.2 \
---interface_type doughnut \
+--interface_type roll \
 --unitcell substrates/calcite/calcite_104_unitcell.gro \
 --gen_substr false \
 --freeze_substr false \
@@ -19,7 +19,7 @@ python py/cal_script_universal.py \
 --init_core 0 \
 --node 2 \
 --dependency -1 \
---exp_folder calcite_decane_water_doughnut \
+--exp_folder calcite_decane_water_roll \
 --system_name cal_dec_tip4p \
---server_folder PANDA_exp/panda_nn \
+--server_folder PANDA_exp/test_new \
 --send_to_server false

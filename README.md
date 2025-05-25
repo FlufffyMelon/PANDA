@@ -3,8 +3,8 @@
 # PANDA: Predicting Angle from Nanoscale Density Analysis
 
 <p align="left">
-  <a href="https://doi.org/10.1016/j.colsurfa.2025.135994"><img alt="Journal" src="https://img.shields.io/badge/journal-Colloids%20%26%20Surfaces%20A-blue"></a>
-  <a href="https://doi.org/10.1016/j.colsurfa.2025.135994"><img alt="Article" src="https://img.shields.io/badge/article-Elsevier-green"></a>
+  <a href="https://doi.org/10.1016/j.colsurfa.2024.135994"><img alt="Journal" src="https://img.shields.io/badge/journal-Colloids%20%26%20Surfaces%20A-blue"></a>
+  <a href="https://doi.org/10.1016/j.colsurfa.2024.135994"><img alt="Article" src="https://img.shields.io/badge/article-Elsevier-green"></a>
   <a href="https://img.shields.io/badge/license-MIT-brightgreen"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-brightgreen"></a>
   <a href="https://img.shields.io/badge/python-%3E%3D3.8-blue"><img alt="Python >=3.8" src="https://img.shields.io/badge/python-%3E%3D3.8-blue"></a>
 </p>
@@ -68,7 +68,7 @@ See the [`examples/calcite_decane_contact_angle.ipynb`](examples/calcite_decane_
 
 If you use PANDA in your research, please cite:
 
-[**Semenchuk, A. A., N. D. Kondratyuk, and I. V. Kopanichuk. "PANDA: Predicting angle from nanoscale density analysis." Colloids and Surfaces A: Physicochemical and Engineering Aspects 708 (2025): 135994.**](https://doi.org/10.1016/j.colsurfa.2025.135994)
+[**Semenchuk, A. A., N. D. Kondratyuk, and I. V. Kopanichuk. "PANDA: Predicting angle from nanoscale density analysis." Colloids and Surfaces A: Physicochemical and Engineering Aspects 708 (2025): 135994.**](https://doi.org/10.1016/j.colsurfa.2024.135994)
 
 **BibTeX:**
 ```bibtex
