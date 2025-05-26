@@ -7,35 +7,36 @@ from .grid import Grid
 from panda.utils import get_center_pbc
 
 
-def build_system(
-    dir,
-    traj,  # mdtraj.Trajectory object
-    names=None,
-    numbers=None,
+def build(
+    ff_path,
+    initial_traj,  # mdtraj.Trajectory object
+    mol_names=None,
+    mol_numbers=None,
     shapes=None,
-    substr_points=None,
     insertion_limit=int(1e5),
     rotation_limit=10,
     package=0.4,
     insertion_attempts=10,
     min_dist2=0.08**2,
 ):
-    if names is None or numbers is None or shapes is None:
+    if mol_names is None or mol_numbers is None or shapes is None:
         sys.exit("Please, give all the parameters")
 
-    if not (len(names) == len(numbers) == len(shapes)):
+    if not (len(mol_names) == len(mol_numbers) == len(shapes)):
         sys.exit("Parameters have different lengths")
 
-    system_size = traj.unitcell_lengths[0]
+    system_size = initial_traj.unitcell_lengths[0]
+    print()
     print("Number of molecules:")
-    for i, name in enumerate(names):
-        print(name, "\t", numbers[i])
+    for i, name in enumerate(mol_names):
+        print(name, "\t", mol_numbers[i])
+    print()
 
     atoms_number = []
     mol_trajs = []
     mol_sizes = []
-    for i, name in enumerate(names):
-        mol_traj = md.load(f"{dir}/{name}.gro")
+    for i, name in enumerate(mol_names):
+        mol_traj = md.load(f"{ff_path}/{name}.gro")
         atoms_number.append(mol_traj.n_atoms)
         mol_trajs.append(mol_traj)
 
@@ -49,55 +50,45 @@ def build_system(
     max_diameter = 2 * max(mol_sizes)
 
     # Prepare arrays for new atoms and coordinates
-    total_new_atoms = np.sum(atoms_number * numbers)
-    all_xyz = np.vstack((traj.xyz[0], np.zeros((total_new_atoms, 3))))
-    points = np.vstack((substr_points, np.zeros((sum(numbers), 3))))
-    point_id = substr_points.shape[0]
-    atom_id = substr_points.shape[0]
+    total_new_atoms = np.sum(atoms_number * mol_numbers)
+    all_xyz = np.vstack((initial_traj.xyz[0], np.zeros((total_new_atoms, 3))))
+    points = np.vstack((initial_traj.xyz[0], np.zeros((sum(mol_numbers), 3))))
+    point_id = initial_traj.xyz[0].shape[0]
+    atom_id = initial_traj.xyz[0].shape[0]
 
     # Build new topology: flat, just residues and atoms
     new_top = md.Topology()
     # Copy substrate residues and atoms
-    for res in traj.topology.residues:
+    for res in initial_traj.topology.residues:
         new_res = new_top.add_residue(res.name, new_top.add_chain())
         for atom in res.atoms:
             new_top.add_atom(atom.name, atom.element, new_res, serial=atom.serial)
 
     # Create grid for points and atoms
     point_grid = Grid(system_size, max_diameter)
-    atom_grid = Grid(system_size, max_diameter / max(atoms_number))
+    atom_grid = Grid(system_size, 3*np.sqrt(min_dist2)/2)
     for i in range(point_id):
         point_grid.add(points[i], i)
     for i in range(atom_id):
         atom_grid.add(all_xyz[i], i)
+    print()
 
-    print("\nFilling system:")
-    for i, name in enumerate(names):
-        # mol_traj = mol_trajs[i]
-        # mol_xyz = mol_traj.xyz[0]
-        # # center = get_center_pbc(mol_xyz, system_size)
-        # print(name, mol_xyz)
-        # # mol_xyz -= center[0]
-        # mol_size = np.max(np.linalg.norm(mol_xyz, axis=1))
-        # print(name, mol_size, mol_sizes[i])
-
+    print("Filling system:")
+    for i, name in enumerate(mol_names):
         mol_traj = mol_trajs[i]
         mol_xyz = mol_traj.xyz[0]
         mol_size = mol_sizes[i]
 
-        for mol_id in tqdm(range(numbers[i]), desc=name):
+        for _ in tqdm(range(mol_numbers[i]), desc=name):
             attempt = 0
             while attempt <= insertion_attempts:
                 new_point = insert_point(
                     shapes[i],
                     points,
-                    point_id,
                     point_grid,
-                    system_size,
                     mol_size,
-                    mol_id,
                     insertion_limit,
-                    package,
+                    package
                 )
                 if new_point is None:
                     attempt += 1
@@ -107,13 +98,10 @@ def build_system(
                 new_mol_xyz = insert_atom(
                     all_xyz,
                     new_point,
-                    atom_id,
                     mol_xyz,
-                    mol_id,
                     atom_grid,
                     rotation_limit,
-                    min_dist2,
-                    system_size,
+                    min_dist2
                 )
                 if new_mol_xyz is None:
                     attempt += 1
@@ -145,11 +133,11 @@ def build_system(
             atom_id += mol_xyz.shape[0]
 
     # Finalize coordinates
-    all_xyz = all_xyz[: len(list(new_top.atoms))]
+    # all_xyz = all_xyz[: len(list(new_top.atoms))]
     new_traj = md.Trajectory(
         xyz=all_xyz[np.newaxis, :, :],
         topology=new_top,
-        unitcell_lengths=traj.unitcell_lengths,
-        unitcell_angles=traj.unitcell_angles,
+        unitcell_lengths=initial_traj.unitcell_lengths,
+        unitcell_angles=initial_traj.unitcell_angles,
     )
     return new_traj

@@ -85,7 +85,8 @@ if not args.build:
 from panda.geom.Box import Box  # noqa: E402
 from panda.geom.AntiBox import AntiBox  # noqa: E402
 from panda.geom.UnionShape import UnionShape  # noqa: E402
-from panda.assembler.build import build_system  # noqa: E402
+from panda.assembler.build import build  # noqa: E402
+from panda.assembler.mixer import mixer  # <-- Import the new mixer function
 from panda.substr import generate_substrate, generate_calcite_itp  # noqa: E402
 from panda.parser import parse_C6_C12  # noqa: E402
 
@@ -122,7 +123,7 @@ insertion_limit = int(1e5)
 rotation_limit = 1000
 package = 0.3
 insertion_attempts = 10
-distance = {"min": 0.08**2, "opt": 0.12**2}
+distance = {"min2": 0.08**2, "opt2": 0.12**2}
 
 system_size = np.array([WIDTH_X, WIDTH_Y, HEIGHT + H])
 points = traj.xyz[0]
@@ -242,18 +243,17 @@ numbers = list(
 
 # Building system
 if args.build:
-    traj = build_system(
+    traj = build(
         os.path.join(ff_path, "gro"),
         traj,
         names,
         numbers,
         insert_shapes,
-        points,
         insertion_limit=insertion_limit,
         rotation_limit=rotation_limit,
         package=package,
         insertion_attempts=insertion_attempts,
-        min_dist2=distance["min"],
+        min_dist2=distance["min2"],
     )
 
 
@@ -286,9 +286,14 @@ if args.build:
     # Writing structure in gro fileformat
     traj.save(os.path.join(exp_path, filename + ".gro"))
     print("Mixing system")
-    os.system(
-        f"./{os.path.join(args.HOME_DIR, 'panda', 'utils_cpp', 'mixer')} -f {os.path.join(exp_path, filename + '.gro')} -o {os.path.join(exp_path, filename + '.gro')} -mn2 {distance['min']} -opt2 {distance['opt']}"
-    )
+
+    # Use the new Python mixer instead of the cpp mixer
+    traj = mixer(traj, 3*np.sqrt(distance["min2"])/2, distance["min2"], distance["opt2"])
+    traj.save(os.path.join(exp_path, filename + ".gro"))
+
+    # os.system(
+    #     f"./{os.path.join(args.HOME_DIR, 'panda', 'utils_cpp', 'mixer')} -f {os.path.join(exp_path, filename + '.gro')} -o {os.path.join(exp_path, filename + '.gro')} -mn2 {distance['min2']} -opt2 {distance['opt2']}"
+    # )
 
 
 # Generating run.sh

@@ -1,6 +1,7 @@
 import numpy as np
+import itertools
 from .utils import distance_pbc2
-from panda.utils import validate_box, validate_positions_and_box
+from tqdm import tqdm
 
 
 class Grid:
@@ -18,21 +19,22 @@ class Grid:
         self.cell_size = self.box / self.n_cells  # recalc to fit box exactly
         self.grid = np.empty(self.n_cells, dtype=object)
         self.neighbor_cell_indices = np.empty(self.n_cells, dtype=object)
-        for ix in range(self.n_cells[0]):
-            for iy in range(self.n_cells[1]):
-                for iz in range(self.n_cells[2]):
-                    self.grid[ix, iy, iz] = []
 
-                    self.neighbor_cell_indices[ix, iy, iz] = []
-                    for dx in [-1, 0, 1]:
-                        for dy in [-1, 0, 1]:
-                            for dz in [-1, 0, 1]:
-                                nidx = (
-                                    (ix + dx) % self.n_cells[0],
-                                    (iy + dy) % self.n_cells[1],
-                                    (iz + dz) % self.n_cells[2],
-                                )
-                                self.neighbor_cell_indices[ix, iy, iz].append(nidx)
+        total_cells = np.prod(self.n_cells) # Calculate total number of cells
+        # Iterate over all cells and initialize grid and neighbor indices
+        for ix, iy, iz in tqdm(itertools.product(range(self.n_cells[0]), range(self.n_cells[1]), range(self.n_cells[2])), total=total_cells, desc="Cells"):
+            self.grid[ix, iy, iz] = []
+
+            self.neighbor_cell_indices[ix, iy, iz] = []
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    for dz in [-1, 0, 1]:
+                        nidx = (
+                            (ix + dx) % self.n_cells[0],
+                            (iy + dy) % self.n_cells[1],
+                            (iz + dz) % self.n_cells[2],
+                        )
+                        self.neighbor_cell_indices[ix, iy, iz].append(nidx)
 
     def get_cell_index(self, pos):
         idx = np.floor(pos / self.cell_size).astype(int) % self.n_cells
@@ -48,7 +50,19 @@ class Grid:
             ids = self.grid[nidx]
 
             if ids:
-                # neigh_pos = np.array([all_positions[i] for i in ids])
                 if np.any(distance_pbc2(pos, all_positions[ids], self.box) < min_dist2):
                     return True
         return False
+
+    def remove(self, pos, obj_id):
+        idx = self.get_cell_index(pos)
+        if obj_id in self.grid[idx]:
+            self.grid[idx].remove(obj_id)
+
+    def move(self, pos_old, pos_new, obj_id):
+        idx_old = self.get_cell_index(pos_old)
+        idx_new = self.get_cell_index(pos_new)
+        if idx_old != idx_new:
+            if obj_id in self.grid[idx_old]:
+                self.grid[idx_old].remove(obj_id)
+            self.grid[idx_new].append(obj_id)
