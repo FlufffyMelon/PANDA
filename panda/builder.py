@@ -18,13 +18,8 @@ def build_system(config_path):
     print("[Config] Config loaded successfully.\n")
 
     # Substrate loading/generation
-    if isinstance(cfg.substrate, str):
-        substr_path = cfg.substrate
-        traj = md.load(substr_path)
-    else:
-        substrate_obj = instantiate(cfg.substrate)
-        substr_path = substrate_obj.gro_path
-        traj = md.load(substr_path)
+    substr_path = cfg.substrate
+    traj = md.load(substr_path)
 
     # Check if unitcell is orthogonal
     box_lengths = traj.unitcell_lengths[0]

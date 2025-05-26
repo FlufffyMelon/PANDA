@@ -14,7 +14,9 @@ setup(
         "mdtraj",
         "tqdm",
         "matplotlib",
-        "Jupyter",
+        "click",
+        "hydra-core",
+        "omegaconf",
     ],  # Add dependencies here if needed
     python_requires=">=3.8",
     include_package_data=True,
