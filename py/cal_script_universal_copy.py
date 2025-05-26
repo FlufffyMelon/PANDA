@@ -121,6 +121,7 @@ ff_path = os.path.join(args.HOME_DIR, "ff", ff_type)
 insertion_limit = int(1e5)
 rotation_limit = 1000
 package = 0.3
+insertion_attempts = 10
 distance = {"min": 0.08**2, "opt": 0.12**2}
 
 system_size = np.array([WIDTH_X, WIDTH_Y, HEIGHT + H])
@@ -251,6 +252,7 @@ if args.build:
         insertion_limit=insertion_limit,
         rotation_limit=rotation_limit,
         package=package,
+        insertion_attempts=insertion_attempts,
         min_dist2=distance["min"],
     )
 

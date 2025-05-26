@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from .pbc import distance_pbc2, delta_pbc
+from .utils import distance_pbc2, delta_pbc
 
 
 def push_atoms_apart(xyz, box, mol_ids, min_dist2, max_dist2, iteration_lim=10):

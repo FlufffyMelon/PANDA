@@ -2,8 +2,8 @@ python py/cal_script_universal_copy.py \
 --H 6 \
 --phi 0.3 \
 --build true \
---Lx 12 \
---Ly 12 \
+--Lx 6 \
+--Ly 6 \
 --Lz 4 \
 --offset 0.2 \
 --interface_type roll \
