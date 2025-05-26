@@ -1,0 +1,51 @@
+# Paths and names
+exp_folder: test
+system_name: cal_decane_tip4p
+output_dir: ./
+
+# System generation parameters
+mol_path: ./
+WIDTH_X: 12.0
+WIDTH_Y: 12.0
+HEIGHT: 4.0
+H: 6.0
+phi: 0.5 # Volume fraction of non-wetting fraction (droplets)
+
+# Substrate parameters
+substrate: calcite.gro
+
+# Names and densities of the compounds
+names: ["decane", "tip4p"]
+density: [3.0896, 33.3277] # 1/nm^3
+
+# Defining regions
+regions:
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} / 2 + ${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} - ${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+
+mixer_grid_cell_size: ${eval:3 * 0.08 / 2}
+
+# Builder parameters (Recomend not to touch)
+insertion_limit: 100000
+rotation_limit: 1000
+package: 0.3
+insertion_attempts: 10
+min2: 0.0064  # 0.08**2
+opt2: 0.0144  # 0.12**2
+

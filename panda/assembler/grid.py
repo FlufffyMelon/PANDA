@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 
 class Grid:
-    def __init__(self, box, max_diameter, buffer=0.0):
+    def __init__(self, box, max_diameter, buffer=0.0, label=None):
         """
         box: simulation box (3,)
         max_diameter: float, the largest molecule diameter
@@ -14,15 +14,25 @@ class Grid:
         self.box = np.asarray(box)
         self.cell_size = max_diameter + buffer
         self.n_cells = np.floor(self.box / self.cell_size).astype(int)
-        print(f"Constructing grid with dimensions {'x'.join(map(str, self.n_cells))}")
+        label_str = f" ({label})" if label else ""
+        print(
+            f"[Grid] {self.n_cells[0]}x{self.n_cells[1]}x{self.n_cells[2]}{label_str}"
+        )
         self.n_cells[self.n_cells < 1] = 1
         self.cell_size = self.box / self.n_cells  # recalc to fit box exactly
         self.grid = np.empty(self.n_cells, dtype=object)
         self.neighbor_cell_indices = np.empty(self.n_cells, dtype=object)
 
-        total_cells = np.prod(self.n_cells) # Calculate total number of cells
+        total_cells = np.prod(self.n_cells)  # Calculate total number of cells
         # Iterate over all cells and initialize grid and neighbor indices
-        for ix, iy, iz in tqdm(itertools.product(range(self.n_cells[0]), range(self.n_cells[1]), range(self.n_cells[2])), total=total_cells, desc="Cells"):
+        for ix, iy, iz in tqdm(
+            itertools.product(
+                range(self.n_cells[0]), range(self.n_cells[1]), range(self.n_cells[2])
+            ),
+            total=total_cells,
+            desc="Cells",
+            leave=False,
+        ):
             self.grid[ix, iy, iz] = []
 
             self.neighbor_cell_indices[ix, iy, iz] = []

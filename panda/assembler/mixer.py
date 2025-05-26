@@ -6,7 +6,9 @@ from .grid import Grid
 import mdtraj as md
 
 
-def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_molecule=False):
+def mixer(
+    traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_molecule=False
+):
     """
     Mixes the traj by pushing atoms apart if they are too close, using a Grid for fast neighbor search.
     Args:
@@ -36,7 +38,7 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
     opt_dist = np.sqrt(opt_dist2)
 
     # Build grid for initial positions
-    grid = Grid(box, grid_size)
+    grid = Grid(box, grid_size, label="mixing")
     for idx in range(n_atoms):
         grid.add(xyz[idx], idx)
 
@@ -46,7 +48,7 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
         overlap = False
         overlap_counter = 0
         ins += 1
-        print(f"Iteration {ins}")
+        print(f"[Mixing] Iteration {ins}")
 
         for i in tqdm(range(n_atoms), desc="Atoms"):
             # First check collision using the grid function
@@ -56,7 +58,9 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
                 for nidx in grid.neighbor_cell_indices[idx_i]:
                     # Get atom indices in the current neighbor cell, excluding atom i
                     if idx_i == nidx:
-                        neighbor_atom_ids_in_cell = [j for j in grid.grid[nidx] if j != i]
+                        neighbor_atom_ids_in_cell = [
+                            j for j in grid.grid[nidx] if j != i
+                        ]
                     else:
                         neighbor_atom_ids_in_cell = grid.grid[nidx]
                     # neighbor_atom_ids_in_cell = [j for j in grid.grid[nidx] if j < i]
@@ -68,7 +72,7 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
 
                     # Calculate deltas and squared distances for atoms in this neighbor cell
                     deltas = delta_pbc(xyz[i], neighbor_xyz_in_cell, box)
-                    d2s = np.sum(deltas ** 2, axis=1)
+                    d2s = np.sum(deltas**2, axis=1)
 
                     # Find indices of atoms in this neighbor cell that are too close
                     close_indices_in_cell = np.argwhere(d2s < min_dist2).flatten()
@@ -79,7 +83,7 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
 
                         # Option to skip collisions within the same molecule
                         if not check_same_molecule and mol_ids[i] == mol_ids[j]:
-                             continue  # skip same molecule
+                            continue  # skip same molecule
 
                         overlap = True
                         overlap_counter += 1
@@ -95,7 +99,7 @@ def mixer(traj, grid_size, min_dist2, opt_dist2, iteration_lim=10, check_same_mo
                         # xyz[j] = xyz[j] % box
                         grid.move(old_pos, xyz[j], j)
 
-        print(f"{overlap_counter} overlaps detected")
+        print(f"[Mixing] Detected {overlap_counter} overlaps")
 
     traj.xyz = apply_pbc(xyz, box)
     return traj

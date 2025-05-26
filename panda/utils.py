@@ -75,6 +75,10 @@ def validate_list_and_array(array: Union[list, np.array]):
         return np.array(array)
     elif isinstance(array, np.ndarray):
         return array
+    elif array is None:
+        return None
+    else:
+        return np.array(array)
 
 
 def str2bool(s: str) -> bool:

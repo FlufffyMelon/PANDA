@@ -19,10 +19,10 @@ def insert_point(
         insertion_counter += 1
 
         if 5 * insertion_counter % insertion_limit == 0:
-            print(f"Please, wait ... mol is tried to be inserted\n")
+            print("    [Insert] Please, wait ... molecule is being inserted...")
 
         new_point = shape.generate_point()
-        min_dist2 = ((2 - insertion_counter / insertion_limit) * package * mol_size)
+        min_dist2 = (2 - insertion_counter / insertion_limit) * package * mol_size
         if not point_grid.check_collision(new_point, points, min_dist2):
             return new_point
 

@@ -46,7 +46,7 @@ import panda
   axises_avg, denses_avg = panda.block_average_density_profile(axises, denses, block_length)
   ```
 
-- **`profile_approx_from_array()`**
+- **`profile_approx()`**
   Fits a density profile and extracts the contact angle and other parameters.
   **Typical usage:**
   ```python
@@ -57,12 +57,25 @@ import panda
   angle_deg = np.rad2deg(result['theta'])
   ```
 
+## 🛠️ System Builder
+
+PANDA now includes a **system builder** for assembling molecular systems from configuration files. This tool streamlines the setup of simulation systems and can be accessed directly from the command line.
+
+**Usage:**
+```bash
+panda build --config <path-to-the-config>
+```
+- `<path-to-the-config>`: Path to your YAML configuration file describing the system to assemble.
+
+For detailed configuration examples and templates, see the [`examples/building_system/`](examples/building_system/) directory.
+
 ## 📒 Examples
 
-See the [`examples/calcite_decane_contact_angle.ipynb`](examples/calcite_decane_contact_angle.ipynb) Jupyter notebook, which demonstrates the full PANDA workflow, including:
-- Density profile extraction
-- Block averaging
-- Contact angle calculation
+- **System Generation:**
+  Explore the [`examples/building_system/`](examples/building_system/) folder for scripts and configuration files demonstrating automated system assembly with the builder.
+
+- **Contact Angle Calculation:**
+  The Jupyter notebook for the full PANDA workflow (density profile extraction, block averaging, contact angle calculation) is now located in [`examples/contact_angle/calcite_decane_contact_angle.ipynb`](examples/contact_angle/calcite_decane_contact_angle.ipynb).
 
 ## 📖 Reference
 
