@@ -2,9 +2,9 @@ from typing import Union
 
 import numpy as np
 
-from ... import interface
-from ...utils import validate_list_and_array
-from ..Shape import Shape
+from panda import interface
+from panda.utils import validate_list_and_array
+from panda.geom import Shape
 
 
 class Interface(Shape):
@@ -97,3 +97,4 @@ class Interface(Shape):
 
     def check_existence(self) -> bool:
         return self.phi_min <= self.phi <= self.phi_max
+
