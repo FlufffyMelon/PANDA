@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 from panda import interface
 from scipy.optimize import minimize
 
@@ -146,9 +145,7 @@ def profile_approx_from_array(
     assert extention in ["theta", "delta", "alpha"]
     rho = getattr(interface, f"rho_{interface_type}_{extention}")
     try:
-        grad_rho = getattr(
-            interface, f"grad_rho_{interface_type}_{extention}"
-        )
+        grad_rho = getattr(interface, f"grad_rho_{interface_type}_{extention}")
     except AttributeError:
         # print("Gradient function does not exist. Using numerical approximation")
         grad_rho = None

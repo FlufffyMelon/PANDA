@@ -29,11 +29,11 @@ import panda
 
 ### Main Functions
 
-- **`get_each_density_profile()`**
+- **`get_density_profile()`**
   Extracts the density profile for each frame of a molecular dynamics trajectory (currently only XTC format is supported).
   **Typical usage:**
   ```python
-  axises, denses = panda.get_each_density_profile(
+  axises, denses = panda.get_density_profile(
       trajectory_file, topology_file, residue, sl, chunk_length,
       begin_time, time, timestep, units
   )
@@ -46,7 +46,7 @@ import panda
   axises_avg, denses_avg = panda.block_average_density_profile(axises, denses, block_length)
   ```
 
-- **`profile_approx()`**
+- **`profile_approx_from_array()`**
   Fits a density profile and extracts the contact angle and other parameters.
   **Typical usage:**
   ```python
