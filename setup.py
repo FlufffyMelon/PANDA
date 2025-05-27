@@ -6,7 +6,7 @@ setup(
     description="PANDA: Predicting Angle from Nanoscale Density Analysis",
     author="Semenchuk Alexey, Kopanichuk Ilia, Kondratyuk Nikolay",
     author_email="sem.alexey04@gmail.com",
-    url="https://github.com/FlufffyMelon/PANDA",  # Update this to your actual repo
+    url="https://github.com/FlufffyMelon/PANDA",
     packages=find_packages(),
     install_requires=[
         "numpy",
