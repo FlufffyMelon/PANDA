@@ -31,7 +31,7 @@ def build(
 
     system_size = initial_traj.unitcell_lengths[0]
     print(
-        f"[Build] Number of molecules: "
+        "[Build] Number of molecules: "
         + ", ".join(f"{name}={mol_numbers[i]}" for i, name in enumerate(mol_names))
     )
 
