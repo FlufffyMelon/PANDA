@@ -2,7 +2,11 @@ from typing import Union
 import numpy as np
 import mdtraj as md
 from tqdm import tqdm
-from panda.utils import get_center_pbc, apply_pbc, validate_positions_and_box, validate_list_and_array
+from panda.utils import (
+    get_center_pbc,
+    apply_pbc,
+    validate_positions_and_box,
+)
 
 
 def get_numerical_density_profile(
@@ -115,7 +119,10 @@ def get_density_profile(
 
     return axises, denses
 
-def block_average_density_profile(axises: np.ndarray, denses: np.ndarray, block_size: int = 10):
+
+def block_average_density_profile(
+    axises: np.ndarray, denses: np.ndarray, block_size: int = 10
+):
     """
     Compute block-averaged density profile and axis.
 
@@ -143,7 +150,11 @@ def block_average_density_profile(axises: np.ndarray, denses: np.ndarray, block_
     mean_denses = np.zeros((blocks_num, denses.shape[1]))
 
     for i in range(blocks_num):
-        mean_axises[i, :] = np.mean(axises[(i * block_size):((i+1) * block_size), :], axis=0)
-        mean_denses[i, :] = np.mean(denses[(i * block_size):((i + 1) * block_size), :], axis=0)
+        mean_axises[i, :] = np.mean(
+            axises[(i * block_size) : ((i + 1) * block_size), :], axis=0
+        )
+        mean_denses[i, :] = np.mean(
+            denses[(i * block_size) : ((i + 1) * block_size), :], axis=0
+        )
 
     return mean_axises, mean_denses

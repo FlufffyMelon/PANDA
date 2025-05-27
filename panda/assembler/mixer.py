@@ -1,9 +1,8 @@
 import numpy as np
 from tqdm import tqdm
-from .utils import distance_pbc2, delta_pbc
+from .utils import delta_pbc
 from panda.utils import apply_pbc
 from .grid import Grid
-import mdtraj as md
 
 
 def mixer(
