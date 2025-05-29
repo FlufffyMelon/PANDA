@@ -1,4 +1,3 @@
-from typing import Union
 import numpy as np
 import mdtraj as md
 from tqdm import tqdm

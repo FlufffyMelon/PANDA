@@ -1,4 +1,4 @@
-from alpha import *
-from theta import *
+from .alpha import *
+from .theta import *
 
 __all__ = []

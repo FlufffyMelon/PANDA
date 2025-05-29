@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import pi, cos, sin, tan, sqrt, cbrt, abs, arcsin
+from numpy import pi, cos, sin, tan, sqrt, cbrt, abs
 
 BIG_NUM = np.inf
 
@@ -32,7 +32,7 @@ def phi_max_droplet_alpha(l, th, delta):
 
 
 def S_droplet_alpha(l, phi, th, delta):
-    return NotADirectoryError
+    return NotImplementedError
 
 
 def y_droplet_alpha(z, l, phi, th, delta, center=False):
