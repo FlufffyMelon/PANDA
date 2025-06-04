@@ -4,6 +4,9 @@ import os
 import importlib
 import json
 import mdtraj as md
+import time
+import resource
+import sys
 
 from panda.utils import str2bool
 
@@ -73,6 +76,8 @@ parser.add_argument("--server_folder", type=str, help="Folder on softcluster")
 # Parse arguments
 args = parser.parse_args()
 
+start_time = time.time()
+
 # Argument validation
 assert not args.freeze_substr or args.ansambel != "npt", (
     "Can not run npt with freeze substr"
@@ -129,8 +134,10 @@ system_size = np.array([WIDTH_X, WIDTH_Y, HEIGHT + H])
 points = traj.xyz[0]
 traj.unitcell_lengths[0] = system_size
 
-names = ["decane", "tip4p"]
-density = [3.0896, 33.3277]  # nm-3
+# names = ["decane", "tip4p"]
+# density = [3.0896, 33.3277]  # nm-3
+names = ["ds", "ws"]
+density = [5, 4]
 
 # Dynamically import the module
 module = importlib.import_module(f"panda.geom.interface_geom")
@@ -254,6 +261,7 @@ if args.build:
         package=package,
         insertion_attempts=insertion_attempts,
         min_dist2=distance["min2"],
+        opt_dist2=distance["opt2"],
     )
 
 
@@ -288,7 +296,9 @@ if args.build:
     print("Mixing system")
 
     # Use the new Python mixer instead of the cpp mixer
-    traj = mixer(traj, 3*np.sqrt(distance["min2"])/2, distance["min2"], distance["opt2"])
+    traj = mixer(
+        traj, 3 * np.sqrt(distance["opt2"]) / 2, distance["min2"], distance["opt2"]
+    )
     traj.save(os.path.join(exp_path, filename + ".gro"))
 
     # os.system(
@@ -465,3 +475,13 @@ if args.send_to_server:
     print(f"The transfer to `{server_name}` was completed!")
 else:
     print("Copying completed!")
+
+end_time = time.time()
+print(f"Total execution time: {end_time - start_time:.2f} seconds")
+
+if sys.platform != "win32":
+    # Get maximum resident set size (in kilobytes on most systems)
+    max_memory_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    print(f"Maximum RAM usage: {max_memory_kb} KB")
+else:
+    print("RAM usage measurement using 'resource' is not supported on Windows.")

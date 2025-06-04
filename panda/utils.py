@@ -1,7 +1,6 @@
 from typing import Union
 import numpy as np
-import mdtraj as md
-from tqdm import tqdm
+import math
 
 
 def get_center_pbc(positions: np.array, box: np.array):
@@ -89,3 +88,13 @@ def str2bool(s: str) -> bool:
         return False
     else:
         raise ValueError(f"Invalid boolean value: {s}")
+
+
+def format_bytes(size):
+    if size == 0:
+        return "0 B"
+    unit = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size, 1024)))
+    p = math.pow(1024, i)
+    s = round(size / p, 2)
+    return f"{s} {unit[i]}"

@@ -73,6 +73,7 @@ def build_system(config_path):
         package=cfg.package,
         insertion_attempts=cfg.insertion_attempts,
         min_dist2=cfg.min2,
+        opt_dist2=cfg.opt2,
     )
 
     # Create output dir if needed
