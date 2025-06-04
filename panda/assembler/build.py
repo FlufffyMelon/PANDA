@@ -17,6 +17,7 @@ def build(
     package=0.4,
     insertion_attempts=10,
     min_dist2=0.08**2,
+    opt_dist2=0.12**2,
 ):
     if mol_names is None or mol_numbers is None or shapes is None:
         print("\n[Error] Missing parameters: mol_names, mol_numbers, or shapes.\n")
@@ -47,7 +48,11 @@ def build(
         mol_unitcell = mol_traj.unitcell_lengths
         center = get_center_pbc(mol_xyz, mol_unitcell)
         mol_xyz -= center
-        mol_size = np.max(np.linalg.norm(mol_xyz, axis=2))
+        mol_size = (
+            opt_dist2**0.5
+            if mol_traj.n_atoms == 1
+            else np.max(np.linalg.norm(mol_xyz, axis=2))
+        )
         mol_sizes.append(mol_size)
     atoms_number = np.array(atoms_number)
     max_diameter = 2 * max(mol_sizes)
@@ -68,10 +73,17 @@ def build(
             new_top.add_atom(atom.name, atom.element, new_res, serial=atom.serial)
 
     # Create grid for points and atoms
-    point_grid = Grid(system_size, max_diameter, label="points")
-    atom_grid = Grid(system_size, 3 * np.sqrt(min_dist2) / 2, label="atoms")
-    for i in range(point_id):
-        point_grid.add(points[i], i)
+    if max(atoms_number) == 1:
+        atom_grid = Grid(system_size, 3 * max_diameter / 2, label="atoms")
+        point_grid = atom_grid
+    else:
+        point_grid = Grid(system_size, max_diameter, label="points")
+        atom_grid = Grid(system_size, 3 * np.sqrt(min_dist2) / 2, label="atoms")
+
+    # Fill grids
+    if max(atoms_number) != 1:
+        for i in range(point_id):
+            point_grid.add(points[i], i)
     for i in range(atom_id):
         atom_grid.add(all_xyz[i], i)
     print("[Build] Filling system...")
@@ -84,20 +96,45 @@ def build(
         for _ in tqdm(range(mol_numbers[i]), desc=name):
             attempt = 0
             while attempt <= insertion_attempts:
-                new_point = insert_point(
-                    shapes[i], points, point_grid, mol_size, insertion_limit, package
-                )
-                if new_point is None:
-                    attempt += 1
-                    continue
+                if max(atoms_number) == 1:
+                    new_mol_xyz = insert_point(
+                        shapes[i],
+                        all_xyz,
+                        atom_grid,
+                        mol_size,
+                        insertion_limit,
+                        package,
+                    )
+                    if new_mol_xyz is None:
+                        attempt += 1
+                        continue
 
-                # Find position and orientation for the molecule
-                new_mol_xyz = insert_atom(
-                    all_xyz, new_point, mol_xyz, atom_grid, rotation_limit, min_dist2
-                )
-                if new_mol_xyz is None:
-                    attempt += 1
-                    continue
+                    new_point = new_mol_xyz
+                else:
+                    new_point = insert_point(
+                        shapes[i],
+                        points,
+                        point_grid,
+                        mol_size,
+                        insertion_limit,
+                        package,
+                    )
+                    if new_point is None:
+                        attempt += 1
+                        continue
+
+                    # Find position and orientation for the molecule
+                    new_mol_xyz = insert_atom(
+                        all_xyz,
+                        new_point,
+                        mol_xyz,
+                        atom_grid,
+                        rotation_limit,
+                        min_dist2,
+                    )
+                    if new_mol_xyz is None:
+                        attempt += 1
+                        continue
 
                 break
 
@@ -115,9 +152,10 @@ def build(
                 )
 
             # Adding new point
-            points[point_id, :] = new_point
-            point_grid.add(new_point, point_id)
-            point_id += 1
+            if max(atoms_number) != 1:
+                points[point_id, :] = new_point
+                point_grid.add(new_point, point_id)
+                point_id += 1
 
             # Adding atoms of new molecular
             all_xyz[atom_id : atom_id + mol_xyz.shape[0], :] = new_mol_xyz
@@ -128,11 +166,12 @@ def build(
             for res in mol_traj.topology.residues:
                 new_res = new_top.add_residue(res.name, new_top.add_chain())
                 for atom in res.atoms:
-                    new_top.add_atom(atom.name, atom.element, new_res)
+                    new_top.add_atom(
+                        atom.name, atom.element, new_res, serial=atom_id + 1
+                    )
             atom_id += mol_xyz.shape[0]
 
     # Finalize coordinates
-    # all_xyz = all_xyz[: len(list(new_top.atoms))]
     new_traj = md.Trajectory(
         xyz=all_xyz[np.newaxis, :, :],
         topology=new_top,

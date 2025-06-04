@@ -54,15 +54,19 @@ def mixer(
             if grid.check_collision(xyz[i], xyz, min_dist2):
                 # If collision detected, loop over neighbor cells to find specific colliding atoms
                 idx_i = grid.get_cell_index(xyz[i])
-                for nidx in grid.neighbor_cell_indices[idx_i]:
-                    # Get atom indices in the current neighbor cell, excluding atom i
-                    if idx_i == nidx:
+                for shift in grid.neighbor_shifts:
+                    nidx = (
+                        (idx_i[0] + shift[0]) % grid.n_cells[0],
+                        (idx_i[1] + shift[1]) % grid.n_cells[1],
+                        (idx_i[2] + shift[2]) % grid.n_cells[2],
+                    )
+                    # Get atom indices in the current neighbor cell, excluding atom i if nidx is the same as idx_i
+                    if shift == (0, 0, 0):
                         neighbor_atom_ids_in_cell = [
                             j for j in grid.grid[nidx] if j != i
                         ]
                     else:
                         neighbor_atom_ids_in_cell = grid.grid[nidx]
-                    # neighbor_atom_ids_in_cell = [j for j in grid.grid[nidx] if j < i]
 
                     if not neighbor_atom_ids_in_cell:
                         continue

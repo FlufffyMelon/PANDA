@@ -21,10 +21,21 @@ class Grid:
         self.n_cells[self.n_cells < 1] = 1
         self.cell_size = self.box / self.n_cells  # recalc to fit box exactly
         self.grid = np.empty(self.n_cells, dtype=object)
-        self.neighbor_cell_indices = np.empty(self.n_cells, dtype=object)
+        # self.neighbor_cell_indices = np.empty(self.n_cells, dtype=object)
+
+        # Calculate neighbor shifts
+        self.neighbor_shifts = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                for dz in [-1, 0, 1]:
+                    if not (dx == 0 and dy == 0 and dz == 0):
+                        self.neighbor_shifts.append((dx, dy, dz))
+        self.neighbor_shifts.append(
+            (0, 0, 0)
+        )  # Include the current cell for check_collision logic
 
         total_cells = np.prod(self.n_cells)  # Calculate total number of cells
-        # Iterate over all cells and initialize grid and neighbor indices
+        # Iterate over all cells and initialize grid
         for ix, iy, iz in tqdm(
             itertools.product(
                 range(self.n_cells[0]), range(self.n_cells[1]), range(self.n_cells[2])
@@ -34,17 +45,6 @@ class Grid:
             leave=False,
         ):
             self.grid[ix, iy, iz] = []
-
-            self.neighbor_cell_indices[ix, iy, iz] = []
-            for dx in [-1, 0, 1]:
-                for dy in [-1, 0, 1]:
-                    for dz in [-1, 0, 1]:
-                        nidx = (
-                            (ix + dx) % self.n_cells[0],
-                            (iy + dy) % self.n_cells[1],
-                            (iz + dz) % self.n_cells[2],
-                        )
-                        self.neighbor_cell_indices[ix, iy, iz].append(nidx)
 
     def get_cell_index(self, pos):
         idx = np.floor(pos / self.cell_size).astype(int) % self.n_cells
@@ -56,7 +56,13 @@ class Grid:
 
     def check_collision(self, pos, all_positions, min_dist2):
         idx = self.get_cell_index(pos)
-        for nidx in self.neighbor_cell_indices[idx]:
+        # for nidx in self.neighbor_cell_indices[idx]: # Old way
+        for shift in self.neighbor_shifts:  # New way
+            nidx = (
+                (idx[0] + shift[0]) % self.n_cells[0],
+                (idx[1] + shift[1]) % self.n_cells[1],
+                (idx[2] + shift[2]) % self.n_cells[2],
+            )
             ids = self.grid[nidx]
 
             if ids:
