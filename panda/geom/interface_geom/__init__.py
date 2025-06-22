@@ -5,7 +5,8 @@ from .Worm import *
 from .Roll import *
 from .Perforation import *
 from .Layer import *
-from .AntiDroplet import *
 
+from .AntiDroplet import *
+from .AntiRoll import *
 
 __all__ = []

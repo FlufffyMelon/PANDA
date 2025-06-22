@@ -153,9 +153,9 @@ def profile_approx_from_array(
     # Initial guess for theta and delta
     if samples == 1:
         if extention in ["alpha", "theta"]:
-            theta0 = x0[0]
+            theta0 = [x0[0]]
         if extention in ["alpha", "delta"]:
-            delta0 = x0[1]
+            delta0 = [x0[1]]
     else:
         if extention in ["alpha", "theta"]:
             theta0 = np.linspace(np.pi / 2 + 0.02, np.pi, samples)
@@ -174,6 +174,7 @@ def profile_approx_from_array(
         bounds = ((0, 0.49),)
 
     min_best = {
+        "x0i": x0_mesh[0],
         "theta": np.pi,
         "delta": 0,
         "fun": np.inf,
@@ -189,22 +190,25 @@ def profile_approx_from_array(
             bounds=bounds,
             args=(z[left:right], dens[left:right], l, phi, rho, grad_rho),
             options={"disp": display},
-            callback=callback,
+            # callback=callback,
         )
 
         if extention == "alpha":
             best = {
+                "x0i": x0i,
                 "theta": res.x[0],
                 "delta": res.x[1],
                 "fun": res.fun,
             }
         elif extention == "theta":
             best = {
+                "x0i": x0i,
                 "theta": res.x[0],
                 "fun": res.fun,
             }
         elif extention == "delta":
             best = {
+                "x0i": x0i,
                 "delta": res.x[0],
                 "fun": res.fun,
             }
@@ -216,6 +220,19 @@ def profile_approx_from_array(
             best.update({"mae": mae, "rmse": rmse})
 
             min_best = best
+
+    # If callback is not None, run the minimization again with the best parameters and callback
+    if callback is not None:
+        minimize(
+            L1,
+            min_best["x0i"],
+            method=method,
+            # jac=None if grad_rho is None else grad_L1,
+            bounds=bounds,
+            args=(z[left:right], dens[left:right], l, phi, rho, grad_rho),
+            options={"disp": display},
+            callback=callback,
+        )
 
     return z, dens, min_best
 
