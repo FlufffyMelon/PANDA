@@ -18,23 +18,42 @@ def build_system(config_path):
     print("[Config] Config loaded successfully.\n")
 
     # Substrate loading/generation
-    substr_path = cfg.substrate
-    traj = md.load(substr_path)
+    if cfg.get("substrate", None):
+        substr_path = cfg.substrate
+        traj = md.load(substr_path)
 
-    # Check if unitcell is orthogonal
-    box_lengths = traj.unitcell_lengths[0]
-    assert np.all(box_lengths[:3] > 0), "Box lengths must be positive."
-    if box_lengths.shape[0] > 3:
-        assert np.allclose(box_lengths[3:], 0), (
-            "Box should be orthorhombic (last 6 box components should be zero)."
+        # Check if unitcell is orthogonal
+        box_lengths = traj.unitcell_lengths[0]
+        assert np.all(box_lengths[:3] > 0), "Box lengths must be positive."
+        if box_lengths.shape[0] > 3:
+            assert np.allclose(box_lengths[3:], 0), (
+                "Box should be orthorhombic (last 6 box components should be zero)."
+            )
+
+        # Update system size with actual values
+        cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT = map(float, box_lengths[:3])
+
+        # Adding the pore height to the substr unitcell
+        if cfg.get("H", None):
+            system_size = np.array([[cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT + cfg.H]])
+        else:
+            raise ValueError("H must be specified if substrate is provided.")
+
+        traj.unitcell_lengths[0] = system_size
+    else:
+        traj = md.Trajectory(
+            xyz=np.empty((0, 3)),
+            topology=md.Topology(),
+            unitcell_lengths=np.array([cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT]),
+            unitcell_angles=np.array([90, 90, 90]),
         )
 
-    # Update system size with actual values
-    cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT = map(float, box_lengths[:3])
-
-    # Adding the pore heigth to the substr unitcell
-    system_size = np.array([cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT + cfg.H])
-    traj.unitcell_lengths[0] = system_size
+    # # Adding the pore height to the substr unitcell
+    # if cfg.get("H", None):
+    #     system_size = np.array([[cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT + cfg.H]])
+    # else:
+    #     # system_size = np.array([[cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT]])
+    # traj.unitcell_lengths = system_size[:, np.newaxis, :]
 
     # Reading names and densities of the compounds
     names = list(cfg.names)

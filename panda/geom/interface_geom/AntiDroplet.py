@@ -54,4 +54,3 @@ class Antidroplet(Droplet):
                 point[2] += self.delta * self.H
 
         return point
-
