@@ -15,9 +15,9 @@ mol_path: ./
 # =============================
 # The following parameters define the simulation box and pore geometry.
 # These are typically overwritten by the substrate file's box size, but are used for region definitions.
-WIDTH_X: 20.0   # Box width in X (nm)
-WIDTH_Y: 10.0   # Box width in Y (nm)
-HEIGHT: 10.0     # Substrate thickness (nm)
+WIDTH_X: 10.0   # Box width in X (nm)
+WIDTH_Y: 5.0   # Box width in Y (nm)
+HEIGHT: 5.0     # Substrate thickness (nm)
 phi: 0.5        # Volume fraction of non-wetting region (droplets)
 
 # =============================

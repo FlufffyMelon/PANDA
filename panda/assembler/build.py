@@ -102,8 +102,9 @@ def build(
                         all_xyz,
                         atom_grid,
                         mol_size,
-                        insertion_limit,
-                        package,
+                        insertion_limit=insertion_limit,
+                        min_dist2=min_dist2,
+                        package=package,
                     )
                     if new_mol_xyz is None:
                         attempt += 1
@@ -116,8 +117,8 @@ def build(
                         points,
                         point_grid,
                         mol_size,
-                        insertion_limit,
-                        package,
+                        insertion_limit=insertion_limit,
+                        package=package,
                     )
                     if new_point is None:
                         attempt += 1
@@ -129,8 +130,8 @@ def build(
                         new_point,
                         mol_xyz,
                         atom_grid,
-                        rotation_limit,
-                        min_dist2,
+                        rotation_limit=rotation_limit,
+                        min_dist2=min_dist2,
                     )
                     if new_mol_xyz is None:
                         attempt += 1

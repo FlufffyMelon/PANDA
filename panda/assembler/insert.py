@@ -8,10 +8,13 @@ def insert_point(
     point_grid,
     mol_size,
     insertion_limit=int(1e5),
+    min_dist2=None,
     package=0.4,
 ):
     if mol_size < 0.05:
         mol_size = 0.05
+
+    single_atom = min_dist2 is None
 
     insertion_counter = 0
 
@@ -22,7 +25,8 @@ def insert_point(
             print("    [Insert] Please, wait ... molecule is being inserted...")
 
         new_point = shape.generate_point()
-        min_dist2 = (2 - insertion_counter / insertion_limit) * package * mol_size
+        if single_atom:
+            min_dist2 = (2 - insertion_counter / insertion_limit) * package * mol_size
         if not point_grid.check_collision(new_point, points, min_dist2):
             return new_point
 
@@ -35,13 +39,20 @@ def insert_atom(
     mol_xyz,
     atom_grid,
     rotation_limit=10,
+    # single_atom=True,
     min_dist2=0.08**2,
 ):
     rotation_counter = 0
 
     while rotation_counter < rotation_limit:
         rotation_counter += 1
+
+        # if single_atom:
+        #     new_mol_xyz = mol_xyz + new_point
+        # else:
+        #     new_mol_xyz = rotate_random(mol_xyz) + new_point
         new_mol_xyz = rotate_random(mol_xyz) + new_point
+
         collision = False
         for atom_xyz in new_mol_xyz:
             if np.any(atom_grid.check_collision(atom_xyz, all_xyz, min_dist2)):
@@ -50,6 +61,9 @@ def insert_atom(
 
         if not collision:
             return new_mol_xyz
+
+        # if single_atom:
+        #     break
 
     return None
 
