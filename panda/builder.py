@@ -6,6 +6,7 @@ from omegaconf import OmegaConf
 from hydra.utils import instantiate
 from panda.assembler.build import build
 from panda.assembler.mixer import mixer
+from panda.utils import serialize_component_config
 
 OmegaConf.register_new_resolver("eval", eval)
 
@@ -48,45 +49,24 @@ def build_system(config_path):
             unitcell_angles=np.array([90, 90, 90]),
         )
 
-    # # Adding the pore height to the substr unitcell
-    # if cfg.get("H", None):
-    #     system_size = np.array([[cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT + cfg.H]])
-    # else:
-    #     # system_size = np.array([[cfg.WIDTH_X, cfg.WIDTH_Y, cfg.HEIGHT]])
-    # traj.unitcell_lengths = system_size[:, np.newaxis, :]
+    # Collect components from config (manual YAML loading, merging with main config for interpolation)
+    components = []
+    config_dir = os.path.dirname(config_path)
+    for comp_yaml in cfg.components:
+        comp_path = os.path.join(config_dir, comp_yaml)
+        comp_cfg = OmegaConf.load(comp_path)
+        component = instantiate(comp_cfg, **cfg)
+        components.append(component)
 
-    # Reading names and densities of the compounds
-    names = list(cfg.names)
-    density = list(cfg.density)
-
-    # Instantiate all regions from config
-    regions = [instantiate(r) for r in cfg.regions]
-    if "insertion_regions" in cfg:
-        insertion_regions = [instantiate(r) for r in cfg.insertion_regions]
-    else:
-        insertion_regions = [instantiate(r) for r in cfg.regions]
-
-    assert len(names) == len(density) == len(regions), (
-        f"The size of the names, density and regions arrays do not match. names ({len(names)}), density ({len(density)}), regions ({len(regions)})"
-    )
-    assert len(regions) == len(insertion_regions), (
-        f"The number of regions and insertation regions do not match. regions ({len(regions)}), insertion_regions ({len(insertion_regions)})"
-    )
-
-    # Counting the number of molecules of each type based on their density
-    mol_numbers = list(
-        np.round(
-            np.array([regions[i].get_volume() * density[i] for i in range(len(names))])
-        ).astype(int)
-    )
+    assert len(components) > 0, "No components defined."
 
     # Building system
     traj = build(
         cfg.mol_path,
         traj,
-        names,
-        mol_numbers,
-        insertion_regions,
+        [c.name for c in components],
+        [c.numbers for c in components],
+        [c.insertion_region for c in components],
         insertion_limit=cfg.insertion_limit,
         rotation_limit=cfg.rotation_limit,
         package=cfg.package,
@@ -100,9 +80,30 @@ def build_system(config_path):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    # Loging config
+    # Helper to serialize region objects
+    def region_to_dict(region):
+        if region is None:
+            return None
+        d = {"type": type(region).__name__}
+        if hasattr(region, "center"):
+            center = getattr(region, "center")
+            # Convert numpy arrays to lists
+            if hasattr(center, "tolist"):
+                center = center.tolist()
+            d["center"] = center
+        if hasattr(region, "borders"):
+            borders = getattr(region, "borders")
+            if hasattr(borders, "tolist"):
+                borders = borders.tolist()
+            d["borders"] = borders
+        return d
+
+    # Prepare a resolved, human-readable version of the config for saving
+    config_to_save = OmegaConf.to_container(cfg, resolve=True)
+    config_to_save["components"] = serialize_component_config(components)
+
     with open(os.path.join(output_path, "config.json"), "w") as f:
-        json.dump(OmegaConf.to_container(cfg, resolve=True), f, indent=4)
+        json.dump(config_to_save, f, indent=4)
 
     # Writing structure in gro fileformat
     traj.save(os.path.join(output_path, cfg.system_name + ".gro"))

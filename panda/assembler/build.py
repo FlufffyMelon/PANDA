@@ -55,6 +55,8 @@ def build(
         )
         mol_sizes.append(mol_size)
     atoms_number = np.array(atoms_number)
+    if max(mol_sizes) > 10:
+        print()
     max_diameter = 2 * max(mol_sizes)
 
     # Prepare arrays for new atoms and coordinates
@@ -170,7 +172,7 @@ def build(
                     new_top.add_atom(
                         atom.name, atom.element, new_res, serial=atom_id + 1
                     )
-            atom_id += mol_xyz.shape[0]
+                    atom_id += 1
 
     # Finalize coordinates
     new_traj = md.Trajectory(

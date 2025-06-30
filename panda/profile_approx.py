@@ -1,6 +1,9 @@
 import numpy as np
 from panda import interface
 from scipy.optimize import minimize
+import concurrent.futures
+import functools
+import itertools
 
 
 def L1(x, z, dens, l, phi, rho_func, grad_rho_func=None):
@@ -90,6 +93,44 @@ def profile_approx(
     )
 
 
+def minimize_worker(
+    x0i, z, dens, l, phi, rho, grad_rho, method, bounds, display, extention
+):
+    from scipy.optimize import minimize
+
+    res = minimize(
+        L1,
+        x0i,
+        method=method,
+        bounds=bounds,
+        args=(z, dens, l, phi, rho, grad_rho),
+        options={"disp": display},
+    )
+    if extention == "alpha":
+        best = {
+            "x0i": x0i,
+            "theta": res.x[0],
+            "delta": res.x[1],
+            "fun": res.fun,
+        }
+    elif extention == "theta":
+        best = {
+            "x0i": x0i,
+            "theta": res.x[0],
+            "fun": res.fun,
+        }
+    elif extention == "delta":
+        best = {
+            "x0i": x0i,
+            "delta": res.x[0],
+            "fun": res.fun,
+        }
+    mae = MAE(res.x, z, dens, l, phi, rho, grad_rho)
+    rmse = RMSE(res.x, z, dens, l, phi, rho, grad_rho)
+    best.update({"mae": mae, "rmse": rmse})
+    return best
+
+
 def profile_approx_from_array(
     dens: np.array,
     z: np.array,
@@ -104,6 +145,7 @@ def profile_approx_from_array(
     x0: tuple = (3 * np.pi / 4, 0.1),
     callback=None,
     display: bool = True,
+    n_jobs: int = 1,
 ) -> tuple[np.array, np.array, dict]:
     """
     Approximate a density profile using a generalized algorithm considering theta and delta.
@@ -117,6 +159,7 @@ def profile_approx_from_array(
         H (float): Height of the pore.
         interface_type (str): Type of surface to use in approximation, e.g., 'roll'.
         display (bool, optional): If True, display optimization details. Default is True.
+        n_jobs (int, optional): Number of parallel processes to use. Default is 1 (serial).
 
     Returns:
         tuple: Contains normalized z-coordinates, normalized density profile values,
@@ -181,44 +224,32 @@ def profile_approx_from_array(
         "mae": np.inf,
         "rmse": np.inf,
     }
-    for x0i in x0_mesh:
-        res = minimize(
-            L1,
-            x0i,
-            method=method,
-            # jac=None if grad_rho is None else grad_L1,
-            bounds=bounds,
-            args=(z[left:right], dens[left:right], l, phi, rho, grad_rho),
-            options={"disp": display},
-            # callback=callback,
-        )
 
-        if extention == "alpha":
-            best = {
-                "x0i": x0i,
-                "theta": res.x[0],
-                "delta": res.x[1],
-                "fun": res.fun,
-            }
-        elif extention == "theta":
-            best = {
-                "x0i": x0i,
-                "theta": res.x[0],
-                "fun": res.fun,
-            }
-        elif extention == "delta":
-            best = {
-                "x0i": x0i,
-                "delta": res.x[0],
-                "fun": res.fun,
-            }
+    # Use functools.partial to fix all arguments except x0i
+    worker = functools.partial(
+        minimize_worker,
+        z=z[left:right],
+        dens=dens[left:right],
+        l=l,
+        phi=phi,
+        rho=rho,
+        grad_rho=grad_rho,
+        method=method,
+        bounds=bounds,
+        display=display,
+        extention=extention,
+    )
 
+    # Ensure n_jobs does not exceed the number of points in x0_mesh
+    if n_jobs > len(x0_mesh):
+        n_jobs = len(x0_mesh)
+
+    # Parallel or serial execution using the same worker
+    with concurrent.futures.ProcessPoolExecutor(max_workers=n_jobs) as executor:
+        results = list(executor.map(worker, x0_mesh))
+
+    for best in results:
         if best["fun"] < min_best["fun"]:
-            mae = MAE(res.x, z[left:right], dens[left:right], l, phi, rho, grad_rho)
-            rmse = RMSE(res.x, z[left:right], dens[left:right], l, phi, rho, grad_rho)
-
-            best.update({"mae": mae, "rmse": rmse})
-
             min_best = best
 
     # If callback is not None, run the minimization again with the best parameters and callback
@@ -227,7 +258,6 @@ def profile_approx_from_array(
             L1,
             min_best["x0i"],
             method=method,
-            # jac=None if grad_rho is None else grad_L1,
             bounds=bounds,
             args=(z[left:right], dens[left:right], l, phi, rho, grad_rho),
             options={"disp": display},

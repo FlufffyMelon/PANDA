@@ -1,0 +1,92 @@
+# =============================
+# General Output Settings
+# =============================
+# Folder for experiment outputs (will be created if it doesn't exist)
+exp_folder: test
+# Name for the generated system (used for output files)
+system_name: orthoclase_with_water_oil_test1
+# Output directory (relative to this config file)
+output_dir: ./
+# Path to folder containing molecule structure files (e.g., .gro, .itp)
+mol_path: ./
+
+# =============================
+# System Geometry
+# =============================
+# The following parameters define the simulation box and pore geometry.
+# These are typically overwritten by the substrate file's box size, but are used for region definitions.
+WIDTH_X: 14.22800   # Box width in X (nm)
+WIDTH_Y: 6.02   # Box width in Y (nm)
+HEIGHT: 6.0     # Substrate thickness (nm)
+H: 7.0          # Pore height above substrate (nm)
+phi: 0.5        # Volume fraction of non-wetting region (droplets)
+
+# =============================
+# Substrate
+# =============================
+# Path to the substrate .gro file
+substrate: orthoclase_v10.gro
+
+# =============================
+# Molecules
+# =============================
+# List of molecule names (should match files in mol_path)
+names: ["perylene", "pyrene", "trimetphen", "tip4p"]
+# Number density for each molecule type (1/nm^3)
+density: [0.2102, 0.0534, 0.0400, 33.3277]
+
+# =============================
+# Regions
+# =============================
+# Define geometric regions for molecule insertion. Each region corresponds to a molecule type.
+regions:
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+  - _target_: panda.geom.Box
+    center:
+      - ${eval:${WIDTH_X} / 2 + ${WIDTH_X} * ${phi} / 2}
+      - ${eval:${WIDTH_Y} / 2}
+      - ${eval:${HEIGHT} + ${H} / 2}
+    borders:
+      - ${eval:${WIDTH_X} - ${WIDTH_X} * ${phi}}
+      - ${WIDTH_Y}
+      - ${H}
+# Optionally, you can define 'insertion_regions' if you want to use different regions for insertion.
+# insertion_regions:
+#   - ...
+
+# =============================
+# Builder Parameters
+# =============================
+# Advanced parameters for the builder. Usually, defaults are fine.
+insertion_limit: 100000      # Max attempts to insert a molecule
+rotation_limit: 1000        # Max attempts to rotate a molecule for insertion
+package: 0.3                # Packing density parameter
+insertion_attempts: 10      # Number of insertion attempts per molecule
+min2: 0.0064                # Minimum allowed squared distance between molecules (nm^2)
+opt2: 0.0144                # Optimal squared distance for mixing (nm^2)

@@ -1,0 +1,84 @@
+{
+    "exp_folder": "test",
+    "system_name": "orthoclase_with_water_oil_test1",
+    "output_dir": "./",
+    "mol_path": "./",
+    "WIDTH_X": 14.228,
+    "WIDTH_Y": 6.02,
+    "HEIGHT": 5.971,
+    "H": 7.0,
+    "phi": 0.5,
+    "substrate": "orthoclase_v10.gro",
+    "names": [
+        "perylene",
+        "pyrene",
+        "trimetphen",
+        "tip4p"
+    ],
+    "density": [
+        0.2102,
+        0.0534,
+        0.04,
+        33.3277
+    ],
+    "regions": [
+        {
+            "_target_": "panda.geom.Box",
+            "center": [
+                3.557,
+                3.01,
+                9.471
+            ],
+            "borders": [
+                7.114,
+                6.02,
+                7.0
+            ]
+        },
+        {
+            "_target_": "panda.geom.Box",
+            "center": [
+                3.557,
+                3.01,
+                9.471
+            ],
+            "borders": [
+                7.114,
+                6.02,
+                7.0
+            ]
+        },
+        {
+            "_target_": "panda.geom.Box",
+            "center": [
+                3.557,
+                3.01,
+                9.471
+            ],
+            "borders": [
+                7.114,
+                6.02,
+                7.0
+            ]
+        },
+        {
+            "_target_": "panda.geom.Box",
+            "center": [
+                10.671,
+                3.01,
+                9.471
+            ],
+            "borders": [
+                7.114,
+                6.02,
+                7.0
+            ]
+        }
+    ],
+    "insertion_limit": 100000,
+    "rotation_limit": 1000,
+    "package": 0.3,
+    "insertion_attempts": 10,
+    "min2": 0.0064,
+    "opt2": 0.0144
+}

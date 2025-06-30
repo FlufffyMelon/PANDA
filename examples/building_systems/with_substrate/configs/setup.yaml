@@ -1,0 +1,47 @@
+# =============================
+# General Output Settings
+# =============================
+# Folder for experiment outputs (will be created if it doesn't exist)
+exp_folder: test
+# Name for the generated system (used for output files)
+system_name: cal_decane_tip4p
+# Output directory (relative to this config file)
+output_dir: ./
+# Path to folder containing molecule structure files (.gro)
+mol_path: ./
+
+# =============================
+# System Geometry
+# =============================
+# The following parameters define the simulation box and pore geometry.
+# These are typically overwritten by the substrate file's box size, but are used for region definitions.
+WIDTH_X: 20.0   # Box width in X (nm)
+WIDTH_Y: 12.0   # Box width in Y (nm)
+HEIGHT: 4.0     # Substrate thickness (nm)
+H: 6.0          # Pore height above substrate (nm)
+phi: 0.5        # Volume fraction of non-wetting region (droplets)
+
+# =============================
+# Substrate
+# =============================
+# Path to the substrate .gro file (leave blank if not using a substrate)
+substrate: calcite.gro
+
+# =============================
+# Components
+# =============================
+# List of component YAML files to include in the system.
+components:
+  - decane.yaml
+  - tip4p.yaml
+
+# =============================
+# Builder Parameters
+# =============================
+# Advanced parameters for the builder. Usually, defaults are fine.
+insertion_limit: 100000      # Max attempts to insert a molecule
+rotation_limit: 1000         # Max attempts to rotate a molecule for insertion
+package: 0.3                 # Packing density parameter
+insertion_attempts: 10       # Number of insertion attempts per molecule
+min2: 0.0064                 # Minimum allowed squared distance between molecules (nm^2)
+opt2: 0.0144                 # Optimal squared distance for mixing (nm^2)
