@@ -56,7 +56,9 @@ def build(
         mol_sizes.append(mol_size)
     atoms_number = np.array(atoms_number)
     if max(mol_sizes) > 10:
-        print()
+        print(
+            f"Warning: max molecule size {max(mol_sizes)} > 10 nm, this may cause problems"
+        )
     max_diameter = 2 * max(mol_sizes)
 
     # Prepare arrays for new atoms and coordinates

@@ -111,7 +111,7 @@ def build_system(config_path):
     # Mixing the system
     print()
     print("[Mixing] Mixing system...")
-    traj = mixer(traj, 3 * cfg.min2**0.5 / 2, cfg.min2, cfg.opt2)
+    traj = mixer(traj, cfg.min2**0.5, cfg.min2, cfg.opt2)
     traj.save(os.path.join(output_path, cfg.system_name + ".gro"))
 
     print()
