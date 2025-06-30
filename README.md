@@ -29,11 +29,11 @@ import panda
 
 ### Main Functions
 
-- **`get_density_profile()`**
+- **`get_each_density_profile()`**
   Extracts the density profile for each frame of a molecular dynamics trajectory (currently only XTC format is supported).
   **Typical usage:**
   ```python
-  axises, denses = panda.get_density_profile(
+  axises, denses = panda.get_each_density_profile(
       trajectory_file, topology_file, residue, sl, chunk_length,
       begin_time, time, timestep, units
   )
@@ -46,7 +46,7 @@ import panda
   axises_avg, denses_avg = panda.block_average_density_profile(axises, denses, block_length)
   ```
 
-- **`profile_approx_from_array()`**
+- **`profile_approx()`**
   Fits a density profile and extracts the contact angle and other parameters.
   **Typical usage:**
   ```python
@@ -59,20 +59,18 @@ import panda
 
 ## 🛠️ System Builder
 
-PANDA now includes a **system builder** for assembling molecular systems from configuration files. This tool streamlines the setup of simulation systems and can be accessed directly from the command line.
+PANDA includes a **system builder** for assembling molecular systems from configuration files. The builder uses a main setup file (e.g., `setup.yaml`) that references component files (e.g., `decane.yaml`, `tip4p.yaml`).
 
 **Usage:**
 ```bash
-panda build --config <path-to-the-config>
+panda build --config <path-to-setup.yaml>
 ```
-- `<path-to-the-config>`: Path to your YAML configuration file describing the system to assemble.
-
-For detailed configuration examples and templates, see the [`examples/building_system/`](examples/building_system/) directory.
+- `<path-to-setup.yaml>`: Path to your main YAML configuration file describing the system setup and listing component files.
 
 ## 📒 Examples
 
 - **System Generation:**
-  Explore the [`examples/building_system/`](examples/building_system/) folder for scripts and configuration files demonstrating automated system assembly with the builder.
+  Explore the [`examples/building_systems`](examples/building_systems) folder for scripts and configuration files demonstrating automated system assembly with the builder.
 
 - **Contact Angle Calculation:**
   The Jupyter notebook for the full PANDA workflow (density profile extraction, block averaging, contact angle calculation) is now located in [`examples/contact_angle/calcite_decane_contact_angle.ipynb`](examples/contact_angle/calcite_decane_contact_angle.ipynb).

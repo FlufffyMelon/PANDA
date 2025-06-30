@@ -98,3 +98,38 @@ def format_bytes(size):
     p = math.pow(1024, i)
     s = round(size / p, 2)
     return f"{s} {unit[i]}"
+
+
+def serialize_component_config(components):
+    """
+    Convert a list of Component objects to a list of JSON-serializable dicts
+    with region and insertion_region as dicts.
+    """
+
+    def region_to_dict(region):
+        if region is None:
+            return None
+        d = {"type": type(region).__name__}
+        if hasattr(region, "center"):
+            center = getattr(region, "center")
+            if hasattr(center, "tolist"):
+                center = center.tolist()
+            d["center"] = center
+        if hasattr(region, "borders"):
+            borders = getattr(region, "borders")
+            if hasattr(borders, "tolist"):
+                borders = borders.tolist()
+            d["borders"] = borders
+        return d
+
+    result = []
+    for comp in components:
+        comp_dict = {
+            "name": comp.name,
+            "region": region_to_dict(getattr(comp, "region", None)),
+            "insertion_region": region_to_dict(getattr(comp, "insertion_region", None)),
+            "density": getattr(comp, "density", None),
+            "numbers": getattr(comp, "numbers", None),
+        }
+        result.append(comp_dict)
+    return result
