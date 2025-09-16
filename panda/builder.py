@@ -9,8 +9,42 @@ from panda.assembler.build import build
 from panda.assembler.mixer import mixer
 from panda.utils import serialize_component_config
 from panda.geom.CustomSubstrate import CustomSubstrate
+import math
 
-OmegaConf.register_new_resolver("eval", eval)
+# OmegaConf.register_new_resolver("eval", eval)
+# Register a simple eval resolver with mathematical functions
+def _eval_resolver(expr: str):
+    try:
+        # Provide mathematical functions in the eval context
+        import math
+        import numpy as np
+
+        eval_globals = {
+            "sqrt": math.sqrt,
+            "log": math.log,
+            "exp": math.exp,
+            "sin": math.sin,
+            "cos": math.cos,
+            "tan": math.tan,
+            "asin": math.asin,
+            "acos": math.acos,
+            "atan": math.atan,
+            "ceil": math.ceil,
+            "floor": math.floor,
+            "abs": abs,
+            "min": min,
+            "max": max,
+            "pi": math.pi,
+            "e": math.e,
+            "np": np,
+            "math": math,
+        }
+        return eval(expr, eval_globals, {})
+    except Exception as e:
+        raise ValueError(f"Failed to eval expression '{expr}': {e}")
+
+if not OmegaConf.has_resolver("eval"):
+    OmegaConf.register_new_resolver("eval", _eval_resolver, use_cache=False)
 
 
 def build_system(config_path):
@@ -18,7 +52,7 @@ def build_system(config_path):
     cfg = OmegaConf.load(config_path)
     print(f"[Config] Loaded config from: {config_path}")
     print(f"[Config] Keys: {', '.join(list(cfg.keys()))}")
-    print("[Config] Config loaded successfully.\n")
+    print("[Config] Config loaded successfully.")
 
     # Substrate loading/generation
     if cfg.get("substrate", None):

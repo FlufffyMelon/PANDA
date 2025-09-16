@@ -12,6 +12,7 @@ class CustomSubstrate:
         self.gro_path, self.itp_path = self._generate()
 
     def _generate(self):
+        print("\nGenerating substrate...")
         substr_name = generate_substrate(
             self.unitcell,
             self.Lx,
