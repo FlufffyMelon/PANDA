@@ -75,7 +75,7 @@ def generate_substrate(
     Returns
     -------
     str
-        The filename of the generated substrate.
+        The path to the file of the generated substrate.
     """
 
     unitcell = md.load(unitcell_path, top=unitcell_path)
@@ -87,6 +87,9 @@ def generate_substrate(
     N = Nx * Ny * Nz
     N_atoms = unitcell.n_atoms
     ex, ey, ez = get_box_vectors(unitcell_box)
+    print(
+        f"Creating substrate with dimensions {unitcell_box[0] * Nx:.1f}x{unitcell_box[1] * Ny:.1f}x{unitcell_box[2] * Nz:.1f}  ({Nx}x{Ny}x{Nz})..."
+    )
 
     # Naming variables
     folder, unitcell_filename = os.path.split(unitcell_path)
@@ -95,7 +98,7 @@ def generate_substrate(
     output_name = f"{filename}_{Nx}x{Ny}x{Nz}.gro"
     output_path = os.path.join(folder, "gro", output_name)
 
-    if not build:
+    if build:
         if os.path.isfile(output_path):
             print(f"A ready-made substrate is used from `{folder}/gro`")
             return output_name
@@ -106,7 +109,6 @@ def generate_substrate(
 
     # Prepare arrays for new coordinates and atom info
     all_xyz = np.zeros((N * N_atoms, 3))
-    resnames = []
     atomnames = []
     mol_ids = []
 
@@ -120,7 +122,6 @@ def generate_substrate(
                     idx = index * N_atoms + a
                     all_xyz[idx, :] = unitcell.xyz[0, a, :] + offset
                     atom = unitcell.topology.atom(a)
-                    resnames.append(atom.residue.name)
                     atomnames.append(atom.name)
                     mol_ids.append(index + 1)
 
@@ -136,16 +137,9 @@ def generate_substrate(
 
     # Build new topology
     top = Topology()
-    chain = top.add_chain()
-    residue_map = {}
+    residue = top.add_residue("CAL", top.add_chain())
     for i in range(N * N_atoms):
-        resname = resnames[i]
-        if (mol_ids[i], resname) not in residue_map:
-            residue = top.add_residue(resname, chain)
-            residue_map[(mol_ids[i], resname)] = residue
-        else:
-            residue = residue_map[(mol_ids[i], resname)]
-        top.add_atom(atomnames[i], element=None, residue=residue)
+        top.add_atom(atomnames[i], element=None, residue=residue, serial=i + 1)
 
     # Set box
     box = unitcell_box[:3] * np.array([Nx, Ny, Nz])
@@ -158,8 +152,10 @@ def generate_substrate(
     )
 
     # Write .gro file
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     traj.save_gro(output_path)
     print("Substrate successfully created!")
+
     return output_name
 
 
@@ -186,7 +182,7 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
     Returns
     -------
     str
-        The filename of the generated .itp file.
+        The path to the file of the generated .itp file.
 
     """
     substr = md.load(substr_path)
@@ -205,10 +201,10 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
     filename = "_".join(substr_name.split("_")[:-1])
     output_path = os.path.join(folder, "itp", output_name)
 
-    if not build:
+    if build:
         if os.path.isfile(output_path):
             print(f"A ready-made itp for substrate is used from `{folder}/itp`")
-            return output_name
+            return output_path
         else:
             print(
                 "The itp does not exist for this substrate size. Forcibly generating it...."
@@ -224,14 +220,16 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
         "O": ["OCA", 15.999, -0.889],
         "Ca": ["CA", 40.078, 1.668],
     }
-    for i, label in np.ndenumerate(substr.atoms):
+
+    atom_names = [a.name for a in substr.topology.atoms]
+    for i, label in np.ndenumerate(atom_names):
         # name = "".join([i for i in label.name if not i.isdigit()])
-        name = label.name[:2] if label.name[:2] == "Ca" else label.name[0]
+        name = label[:2] if label[:2] == "Ca" else label[0]
         counter_dict[name] += 1
         type, mass, charge = metadata[name]
 
         atoms_text += "{:>8}{:>8}{:>8}{:>8}{:>8}{:>8}{:>10}{:>10}\n".format(
-            i[0] + 1, type, 1, "CAL", label.name, 1, charge, mass
+            i[0] + 1, type, 1, "CAL", label, 1, charge, mass
         )
 
     # Writing text of [ constraints ] section
@@ -282,10 +280,11 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
         )
 
     # Writing final itp file
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as f:
         f.write(final_text)
 
-    return output_name
+    return output_path
 
 
 def get_calcite_neighbors_list(substr: md.Trajectory):
@@ -353,22 +352,47 @@ def get_calcite_neighbors_list_numpy(substr: md.Trajectory):
         of indices of neighboring oxygen atoms.
     """
     assert len(substr.unitcell_lengths[0]) == 3, "Box should be orthogonal"
+
+    # Cutoff distance for determining neighboring atoms
     l = 0.118 + 0.022
     neigh_dict = dict()
+
     xyz = substr.xyz[0]
     top = substr.topology
     atom_names = [a.name for a in top.atoms]
-    oxygen_mask = np.array([name.startswith("O") for name in atom_names])
-    oxygen_real_ids = np.where(oxygen_mask)[0]
-    carbon_ids = [i for i, name in enumerate(atom_names) if name.startswith("C")]
+
+    # Initialize masks and lists for oxygen and carbon atom indices
+    oxygen_mask = np.zeros(substr.n_atoms, dtype=bool)
+    oxygen_real_ids = []
+    carbon_ids = []
+
+    # Identify indices of oxygen and carbon atoms
+    for i in range(substr.n_atoms):
+        name = atom_names[i][:2] if atom_names[i][:2] == "Ca" else atom_names[i][0]
+
+        if name == "O":
+            oxygen_mask[i] = True
+            oxygen_real_ids.append(i)
+        elif name == "C":
+            carbon_ids.append(i)
+    oxygen_real_ids = np.array(oxygen_real_ids)
+
     print("Generating neighbors list")
+    # Iterate over carbon atoms to find their neighboring oxygen atoms
     for i in tqdm(carbon_ids):
+        # Calculate relative positions of potential neighboring oxygen atoms
         rij_vecs = xyz[oxygen_mask] - xyz[i, :]
         mask = np.abs(rij_vecs) >= substr.unitcell_lengths[0] / 2
         rij_vecs -= substr.unitcell_lengths[0] * mask * np.sign(rij_vecs)
+
+        # Determine indices of oxygen atoms within the cutoff distance
         neigh_oxygen = np.argwhere(np.linalg.norm(rij_vecs, axis=1) < l).ravel()
         O_neigh = list(oxygen_real_ids[neigh_oxygen])
+
+        # Ensure exactly 3 neighboring oxygen atoms are found
         assert len(O_neigh) == 3, f"Incorrect number of neighbours ({len(O_neigh)})!!!"
+
+        # Store the neighbors in the dictionary
         neigh_dict[i] = O_neigh.copy()
     return neigh_dict
 

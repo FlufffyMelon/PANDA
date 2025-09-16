@@ -14,7 +14,7 @@ class Grid:
         self.box = np.asarray(box)
         self.cell_size = max_diameter + buffer
         self.n_cells = np.clip(
-            np.floor(self.box / self.cell_size), min=1, max=None
+            np.floor(self.box / self.cell_size), a_min=1, a_max=None
         ).astype(int)  # Clip to prevent grid with zero cells
         label_str = f" ({label})" if label else ""
         print(

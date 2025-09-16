@@ -2,7 +2,7 @@ import os
 from panda.substr import generate_substrate, generate_calcite_itp
 
 class CustomSubstrate:
-    def __init__(self, unitcell, Lx, Ly, Lz, freeze_substr=True, build=True):
+    def __init__(self, unitcell: str, Lx: float, Ly: float, Lz: float, freeze_substr: bool = True, build: bool = True):
         self.unitcell = unitcell
         self.Lx = Lx
         self.Ly = Ly

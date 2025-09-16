@@ -75,7 +75,7 @@ def get_density_profile(
     """
 
     # Validate inputs and initialize variables
-    assert residue in ["DECAN"], "This residue type is not available"
+    # assert residue in ["DECAN"], "This residue type is not available"
     assert units.lower() in ["ns", "ps"], "Wrong units"
     u = 1000 if units.lower() == "ns" else 1
 
@@ -94,9 +94,10 @@ def get_density_profile(
         trajectory_file, top=topology_file, chunk=tau, skip=start_frame
     )
     for chunk_idx, chunk in enumerate(tqdm(chunk_iter, total=L, desc="Chunk")):
-        assert int(timestep) == int(chunk.timestep), (
-            f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
-        )
+        if len(chunk) > 1:
+            assert int(timestep) == int(chunk.timestep), (
+                f"The input timestep and the actual timestep do not match. Perhaps timestep = {int(chunk.timestep)}?"
+            )
 
         # Select residue positions and apply periodic boundary conditions
         residue_mask = chunk.top.select(f"resname {residue}")

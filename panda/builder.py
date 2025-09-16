@@ -3,10 +3,12 @@ import os
 import json
 import mdtraj as md
 from omegaconf import OmegaConf
+from omegaconf import DictConfig
 from hydra.utils import instantiate
 from panda.assembler.build import build
 from panda.assembler.mixer import mixer
 from panda.utils import serialize_component_config
+from panda.geom.CustomSubstrate import CustomSubstrate
 
 OmegaConf.register_new_resolver("eval", eval)
 
@@ -20,7 +22,17 @@ def build_system(config_path):
 
     # Substrate loading/generation
     if cfg.get("substrate", None):
-        substr_path = cfg.substrate
+        if isinstance(cfg.substrate, str):
+            # Path to the substrate gro file
+            substr_path = cfg.substrate
+        elif isinstance(cfg.substrate, DictConfig):
+            substr_structure = instantiate(cfg.substrate)
+
+            # Path to the generated substrate gro file
+            substr_path = substr_structure.gro_path
+        else:
+            raise ValueError("Substrate must be a string or a CustomSubstrate object.")
+
         traj = md.load(substr_path)
 
         # Check if unitcell is orthogonal
@@ -52,10 +64,13 @@ def build_system(config_path):
     # Collect components from config (manual YAML loading, merging with main config for interpolation)
     components = []
     config_dir = os.path.dirname(config_path)
+    # TODO: make config_dir more flexible
     for comp_yaml in cfg.components:
         comp_path = os.path.join(config_dir, comp_yaml)
         comp_cfg = OmegaConf.load(comp_path)
-        component = instantiate(comp_cfg, **cfg)
+        # Remove substrate from config to avoid substrate being created multiple times
+        comp_cft_kwargs = {key: value for key, value in cfg.items() if key != "substrate"}
+        component = instantiate(comp_cfg, **comp_cft_kwargs)
         components.append(component)
 
     assert len(components) > 0, "No components defined."
@@ -77,26 +92,7 @@ def build_system(config_path):
 
     # Create output dir if needed
     output_path = os.path.join(cfg.output_dir, cfg.exp_folder)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    # Helper to serialize region objects
-    def region_to_dict(region):
-        if region is None:
-            return None
-        d = {"type": type(region).__name__}
-        if hasattr(region, "center"):
-            center = getattr(region, "center")
-            # Convert numpy arrays to lists
-            if hasattr(center, "tolist"):
-                center = center.tolist()
-            d["center"] = center
-        if hasattr(region, "borders"):
-            borders = getattr(region, "borders")
-            if hasattr(borders, "tolist"):
-                borders = borders.tolist()
-            d["borders"] = borders
-        return d
+    os.makedirs(output_path, exist_ok=True)
 
     # Prepare a resolved, human-readable version of the config for saving
     config_to_save = OmegaConf.to_container(cfg, resolve=True)
