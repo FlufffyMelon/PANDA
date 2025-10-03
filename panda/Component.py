@@ -1,6 +1,7 @@
 from omegaconf import DictConfig
 from hydra.utils import instantiate
 
+
 class Component:
     def __init__(
         self, name, region, insertion_region=None, density=None, numbers=None, **kwargs
@@ -8,7 +9,9 @@ class Component:
         self.name = name
 
         self.region = region
-        self.insertion_region = insertion_region if insertion_region is not None else region
+        self.insertion_region = (
+            insertion_region if insertion_region is not None else region
+        )
 
         region_volume = self.region.get_volume()
         if density is not None and numbers is None:

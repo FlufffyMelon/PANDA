@@ -5,52 +5,147 @@ import mdtraj as md
 from mdtraj.core.topology import Topology
 from tqdm import tqdm
 from itertools import combinations
-from .utils import apply_pbc
+from panda.utils import apply_pbc
+from .utils import base62_encode, get_box_vectors, CustomSubstrate
 
 
-def base62_encode(num, length=4):
-    """
-    Encode a given number in base62.
+class CalciteSubstrate(CustomSubstrate):
+    def __init__(
+        self, unitcell_path: str, Lx: float, Ly: float, Lz: float, build: bool = True
+    ):
+        self.unitcell_path = unitcell_path
+        self.Lx = Lx
+        self.Ly = Ly
+        self.Lz = Lz
+        self.build = build
+        self.gro_path, self.itp_path, self.ndx_path = self._generate()
 
-    Parameters
-    ----------
-    num : int
-        The number to be encoded.
-    length : int, optional
-        The desired length of the encoded string. If the
-        number is shorter than this, it will be padded with
-        zeros. The default is 4.
+    def _generate(self):
+        print("\nGenerating substrate...")
+        substr_name = generate_calcite_substrate(
+            self.unitcell_path,
+            self.Lx,
+            self.Ly,
+            self.Lz,
+            build=self.build,
+        )
+        substr_folder, _ = os.path.split(self.unitcell_path)
+        substr_path = os.path.join(substr_folder, "gro", substr_name)
 
-    Returns
-    -------
-    str
-        The encoded string.
+        substr_itp_name = generate_calcite_itp(substr_path, build=self.build)
+        substr_itp_path = os.path.join(substr_folder, "itp", substr_itp_name)
 
-    """
-    chars = string.digits + string.ascii_uppercase + string.ascii_lowercase
-    base = len(chars)
-    encoded = []
+        substr_ndx_name = generate_calcite_ndx(substr_path, build=self.build)
+        substr_ndx_path = os.path.join(substr_folder, "ndx", substr_ndx_name)
 
-    # Repeatedly divide the number by the base and use the remainder
-    # to construct the encoded string.
-    q, r = divmod(num, base)
-    encoded.append(chars[r])
-    while q > 0:
-        q, r = divmod(q, base)
-        encoded.append(chars[r])
-
-    # Pad with zeros if necessary
-    encoded.extend([chars[0]] * (length - len(encoded)))
-
-    return "".join(reversed(encoded))
+        return substr_path, substr_itp_path, substr_ndx_path
 
 
-def generate_substrate(
+# def generate_calcite_substrate(
+#     unitcell_path: str,
+#     Lx: float,
+#     Ly: float,
+#     Lz: float,
+#     build: bool = True,
+# ):
+#     """
+#     Generate a substrate from a given unitcell.
+
+#     Parameters
+#     ----------
+#     unitcell_path : str
+#         The path to the unitcell .gro file.
+#     Lx : float
+#         The desired length of the substrate in the x direction.
+#     Ly : float
+#         The desired length of the substrate in the y direction.
+#     Lz : float
+#         The desired length of the substrate in the z direction.
+#     freeze_substr : bool
+#         Whether or not to freeze the substrate. If True, the names of the atoms
+#         will not be changed. Default is False.
+#     build : bool
+#         Whether to build the substrate if it does not exist. Default is True.
+
+#     Returns
+#     -------
+#     str
+#         The path to the file of the generated substrate.
+#     """
+
+#     unitcell = md.load(unitcell_path, top=unitcell_path)
+
+#     unitcell_box = unitcell.unitcell_lengths[0]
+
+#     Nx, Ny, Nz = np.round(
+#         np.clip(np.array([Lx, Ly, Lz]) / unitcell_box[:3], 1, None)
+#     ).astype(int)
+#     N = Nx * Ny * Nz
+#     N_atoms = unitcell.n_atoms
+#     ex, ey, ez = get_box_vectors(unitcell_box)
+#     print(
+#         f"Creating substrate with dimensions {unitcell_box[0] * Nx:.1f}x{unitcell_box[1] * Ny:.1f}x{unitcell_box[2] * Nz:.1f}  ({Nx}x{Ny}x{Nz})..."
+#     )
+
+#     # Naming variables
+#     folder, unitcell_filename = os.path.split(unitcell_path)
+#     unitcell_name = os.path.splitext(unitcell_filename)[0]
+#     filename = "_".join(unitcell_name.split("_")[:-1])
+#     output_name = f"{filename}_{Nx}x{Ny}x{Nz}.gro"
+#     output_path = os.path.join(folder, "gro", output_name)
+
+#     if build:
+#         if os.path.isfile(output_path):
+#             print(f"A ready-made substrate is used from `{folder}/gro`")
+#             return output_name
+#         else:
+#             print(
+#                 "A substrate with this size does not exist. Forcibly generating it...."
+#             )
+
+#     substrate = generate_substrate(unitcell, Lx, Ly, Lz, 'CAL')
+#     top = substrate.topology
+
+#     # Rename atoms to be unique
+#     counter_dict = {"C": 0, "O": 0, "Ca": 0}
+#     for idx in range(N * N_atoms):
+#         atom = top.atom(idx)
+
+#         base = "".join([c for c in atom.name if not c.isdigit()])
+#         counter_dict[base] += 1
+#         atom.name = base + base62_encode(
+#             counter_dict[base], length=(3 if base == "Ca" else 4)
+#         )
+
+#     # Build new topology
+#     # top = Topology()
+#     # residue = top.add_residue("CAL", top.add_chain())
+#     # for i in range(N * N_atoms):
+#     #     top.add_atom(atomnames[i], element=None, residue=residue, serial=i + 1)
+
+#     # Set box
+#     # box = unitcell_box[:3] * np.array([Nx, Ny, Nz])
+#     # all_xyz = apply_pbc(all_xyz, box)
+#     # traj = md.Trajectory(
+#     #     all_xyz.reshape(1, -1, 3),
+#     #     top,
+#     #     unitcell_lengths=box.reshape(1, 3),
+#     #     unitcell_angles=np.array([[90.0, 90.0, 90.0]]),
+#     # )
+
+#     # Write .gro file
+#     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+#     substrate.save_gro(output_path)
+#     print("Substrate successfully created!")
+
+#     return output_name
+
+
+def generate_calcite_substrate(
     unitcell_path: str,
     Lx: float,
     Ly: float,
     Lz: float,
-    freeze_substr: bool = False,
     build: bool = True,
 ):
     """
@@ -125,18 +220,18 @@ def generate_substrate(
                     atomnames.append(atom.name)
                     mol_ids.append(index + 1)
 
-    # Optionally rename atoms to be unique
-    if not freeze_substr:
-        counter_dict = {"C": 0, "O": 0, "Ca": 0}
-        for idx, name in enumerate(atomnames):
-            base = "".join([c for c in name if not c.isdigit()])
-            counter_dict[base] += 1
-            atomnames[idx] = base + base62_encode(
-                counter_dict[base], length=(3 if base == "Ca" else 4)
-            )
+    # Rename atoms to be unique
+    counter_dict = {"C": 0, "O": 0, "Ca": 0}
+    for idx, name in enumerate(atomnames):
+        base = "".join([c for c in name if not c.isdigit()])
+        counter_dict[base] += 1
+        atomnames[idx] = base + base62_encode(
+            counter_dict[base], length=(3 if base == "Ca" else 4)
+        )
 
     # Build new topology
     top = Topology()
+    top.add_residue("", top.add_chain())
     residue = top.add_residue("CAL", top.add_chain())
     for i in range(N * N_atoms):
         top.add_atom(atomnames[i], element=None, residue=residue, serial=i + 1)
@@ -159,15 +254,56 @@ def generate_substrate(
     return output_name
 
 
-def get_box_vectors(box: np.array):
-    assert len(box) in {3, 9}
+def generate_calcite_ndx(substr_path: str, build: bool = True):
+    """
+    Generate .ndx file for a calcite substrate, based on the .gro file.
+    Creates one group: CALCITE (all substrate atoms).
 
-    if len(box) == 3:
-        ex, ey, ez = np.diag(box)
+    Parameters
+    ----------
+    substr_path : str
+        The path to the .gro file of the substrate.
+    build : bool
+        Whether to build the ndx if it does not exist. Default is True.
+
+    Returns
+    -------
+    str
+        The name of the generated .ndx file.
+    """
+    # Setup paths
+    folder, substr_filename = os.path.split(substr_path)
+    folder = os.path.split(folder)[0]
+    substr_name = os.path.splitext(substr_filename)[0]
+    output_name = substr_name + ".ndx"
+    output_path = os.path.join(folder, "ndx", output_name)
+
+    # Check if the NDX already exists
+    if build and os.path.isfile(output_path):
+        print(f"A ready-made ndx for substrate is used from `{folder}/ndx`")
+        return output_name
     else:
-        ex, ey, ez = box[:3], box[3:6], box[6:]
+        print(
+            "The ndx does not exist for this substrate size. Forcibly generating it...."
+        )
 
-    return ex, ey, ez
+    # Load the substrate
+    substr = md.load(substr_path)
+
+    # All atoms in the substrate belong to CALCITE group
+    calcite_atoms = list(range(1, substr.n_atoms + 1))  # 1-indexed for GROMACS
+
+    # Write the index file
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        f.write("[ CALCITE ]\n")
+        # Write atoms in groups of 15 per line
+        for i in range(0, len(calcite_atoms), 15):
+            f.write(" ".join(map(str, calcite_atoms[i : i + 15])) + "\n")
+
+    print(f"NDX file with {len(calcite_atoms)} CALCITE atoms created.")
+
+    return output_name
 
 
 def generate_calcite_itp(substr_path: str, build: bool = True):
@@ -204,7 +340,7 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
     if build:
         if os.path.isfile(output_path):
             print(f"A ready-made itp for substrate is used from `{folder}/itp`")
-            return output_path
+            return output_name
         else:
             print(
                 "The itp does not exist for this substrate size. Forcibly generating it...."
@@ -284,53 +420,7 @@ def generate_calcite_itp(substr_path: str, build: bool = True):
     with open(output_path, "w") as f:
         f.write(final_text)
 
-    return output_path
-
-
-def get_calcite_neighbors_list(substr: md.Trajectory):
-    """
-    Generate a dictionary of neighbors for a given substrate using mdtraj.Trajectory.
-
-    Parameters
-    ----------
-    substr : mdtraj.Trajectory
-        The substrate structure as an mdtraj Trajectory object.
-
-    Returns
-    -------
-    dict
-        A dictionary of neighbors, where each key is a Carbon atom index and
-        the value is a list of its Oxygen neighbors (indices).
-
-    Notes
-    -----
-    The substrate structure should be a calcite crystal, with the atoms labeled
-    as "Ca" and "C" for Calcium and Carbon, respectively. The Oxygen atoms are
-    labeled as "O". The box vectors should be orthogonal.
-    """
-    assert len(substr.unitcell_lengths[0]) == 3, "Box should be orthogonal"
-    l = 0.118 + 0.022
-    neigh_dict = dict()
-    xyz = substr.xyz[0]
-    top = substr.topology
-    atom_names = [a.name for a in top.atoms]
-    # Identify indices of C and O atoms
-    carbon_ids = [i for i, a in enumerate(atom_names) if a.startswith("C")]
-    oxygen_ids = [i for i, a in enumerate(atom_names) if a.startswith("O")]
-    print("Generating neighbors list")
-    for i in tqdm(carbon_ids):
-        O_neigh = []
-        for j in oxygen_ids:
-            if len(O_neigh) > 3:
-                print("Too many neighbours...")
-                break
-            if np.linalg.norm(rij(i, j, xyz, substr.unitcell_lengths[0])) <= l:
-                O_neigh.append(j)
-        if len(O_neigh) != 3:
-            print("Can`t find all neighbours!!!", len(O_neigh), i)
-            exit()
-        neigh_dict[i] = O_neigh.copy()
-    return neigh_dict
+    return output_name
 
 
 def get_calcite_neighbors_list_numpy(substr: md.Trajectory):
@@ -395,72 +485,3 @@ def get_calcite_neighbors_list_numpy(substr: md.Trajectory):
         # Store the neighbors in the dictionary
         neigh_dict[i] = O_neigh.copy()
     return neigh_dict
-
-
-def rij(i, j, xyz, box):
-    """
-    Calculate the relative position vector between atoms i and j taking into account PBC.
-
-    Parameters
-    ----------
-    i : int
-        Index of the first atom.
-    j : int
-        Index of the second atom.
-    xyz : np.ndarray
-        Array of atomic coordinates (shape: n_atoms x 3).
-    box : np.ndarray
-        Box dimensions (length 3).
-
-    Returns
-    -------
-    numpy.array
-        The relative position vector between atoms i and j.
-
-    Notes
-    -----
-    The calculation takes into account the periodic boundary conditions of the
-    simulation box. If the relative position vector is larger than half the box
-    size in any dimension, the box size is subtracted from the relative position
-    vector to 'wrap' it around to the other side of the box.
-    """
-    rij = xyz[j, :] - xyz[i, :]
-    mask = np.abs(rij) >= box / 2
-    rij -= box * mask * np.sign(rij)
-    return rij
-
-
-def angle(i, j, k, xyz, box):
-    """
-    Calculate the angle between the vectors defined by atoms i-j and j-k.
-
-    Parameters
-    ----------
-    i : int
-        Index of the first atom.
-    j : int
-        Index of the second atom.
-    k : int
-        Index of the third atom.
-    xyz : np.ndarray
-        Array of atomic coordinates (shape: n_atoms x 3).
-    box : np.ndarray
-        Box dimensions (length 3).
-
-    Returns
-    -------
-    float
-        The angle in degrees between the vectors defined by atoms i-j and j-k.
-
-    Notes
-    -----
-    The calculation takes into account the periodic boundary conditions of the
-    simulation box.
-    """
-    ji = rij(j, i, xyz, box)
-    unit_ji = ji / np.linalg.norm(ji)
-    jk = rij(j, k, xyz, box)
-    unit_jk = jk / np.linalg.norm(jk)
-    dot_product = np.dot(unit_ji, unit_jk)
-    angle = np.arccos(dot_product)
-    return np.rad2deg(angle)

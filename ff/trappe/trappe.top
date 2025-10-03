@@ -20,10 +20,22 @@
    CH3     15.035    0.000  A    9.06e-03    2.52e-05; [CH3]-CHX
     CH     13.019    0.000  A    4.27e-03    1.09e-05; CH-CH
 ; water (tip3p/tip4p2005)
-   OWT    15.9994    0.000  A    3.09e-03    3.07e-06
+   OWT     15.999    0.000  A    3.09e-03    3.07e-06
    HWT     1.0080    0.000  A    0.00e+00    0.00e+00
-   MWT     0.00000   0.000  D    0.00e+00    0.00e+00
-
+   MWT     0.0000    0.000  D    0.00e+00    0.00e+00
+; CLAYFF
+;    Si     28.086	   2.100	A	   0.330203	   7.70065E-06; st tetrahedral silicon
+;    Ob     15.999   -1.050	A	   0.316554	   0.650194; ob bridging oxygen
+;    Oh     15.999   -0.950	A	   0.316554	   0.650194; oh hydroxyl oxygen
+;     O     15.999   -0.525	A	   0.316554	   0.650194; os silicon oxygen
+;     H     1.0079    0.425	A	   0.000000	   0.000000; ho hydroxyl hydrogen
+;    Cl	   35.453	  -1.000	A	   0.439997	   0.418818; Cl aqueous chloride ion
+    Si     28.086	   2.100	A	   3.99e-08	   5.18e-11; st tetrahedral silicon
+    Ob     15.999   -1.050	A	   2.62e-03	   2.63e-06; ob bridging oxygen
+    Oh     15.999   -0.950	A	   2.62e-03	   2.63e-06; oh hydroxyl oxygen
+     O     15.999   -0.525	A	   2.62e-03	   2.63e-06; os silicon oxygen
+     H     1.0079    0.425	A	   0.00e+00	   0.00e+00; ho hydroxyl hydrogen
+    Cl	   35.453	  -1.000	A	   1.22e-02	   8.82e-05; Cl aqueous chloride ion
 
 [ nonbond_params ]
 ;   i    j    func          C6         C12
@@ -48,10 +60,50 @@
   CH3   CA       1    {C6_CH3_CA}    {C12_CH3_CA}
   CH3  OCA       1    {C6_CH3_OCA}    {C12_CH3_OCA}
   CH3  CCA       1    {C6_CH3_CCA}    {C12_CH3_CCA}
+; pairwise LJ for silica CLAYFF (2 combination rule)
+   Si   Si       1    3.99e-08    5.18e-11
+   Si   Ob       1    1.02e-05    1.17e-08
+   Si   Oh       1    1.02e-05    1.17e-08
+   Si    O       1    1.02e-05    1.17e-08
+   Ob   Ob       1    2.62e-03    2.63e-06
+   Ob   Oh       1    2.62e-03    2.63e-06
+   Ob    O       1    2.62e-03    2.63e-06
+   Oh   Oh       1    2.62e-03    2.63e-06
+   Oh    O       1    2.62e-03    2.63e-06
+    O    O       1    2.62e-03    2.63e-06
+; pairwise LJ for silica and Cl CLAYFF (2 combination rule)
+   Si   Cl       1    2.35e-05    7.64e-08
+   Ob   Cl       1    6.13e-03    1.79e-05
+   Oh   Cl       1    6.13e-03    1.79e-05
+    O   Cl       1    6.13e-03    1.79e-05
+   Cl   Cl       1    1.22e-02    8.82e-05
+; pairwise LJ for silica and water CLAYFF (2 combination rule)
+  Si  OWT      1    1.11e-05    1.26e-08
+  Ob  OWT      1    2.85e-03    2.84e-06
+  Oh  OWT      1    2.85e-03    2.84e-06
+   O  OWT      1    2.85e-03    2.84e-06
+; pairwise LJ for silica CLAYFF and decane TraPPE (2 combination rule)
+  Si  CH2      1    1.56e-05    3.55e-08
+  Si  CH3      1    1.92e-05    3.70e-08
+  Si   CH      1    1.32e-05    2.42e-08
+  Ob  CH2      1    4.05e-03    8.21e-06
+  Ob  CH3      1    4.98e-03    8.50e-06
+  Ob   CH      1    3.41e-03    5.55e-06
+  Oh  CH2      1    4.05e-03    8.21e-06
+  Oh  CH3      1    4.98e-03    8.50e-06
+  Oh   CH      1    3.41e-03    5.55e-06
+   O  CH2      1    4.05e-03    8.21e-06
+   O  CH3      1    4.98e-03    8.50e-06
+   O   CH      1    3.41e-03    5.55e-06
 
 
 [ bondtypes ]
 ;   i    j    func          b0          k0
+; bond Si - O CLAYFF
+;   Si   Ob       1    1.63e-01    2.51e+05
+;   Si   Oh       1    1.63e-01    2.51e+05
+;   Si    O       1    1.63e-01    2.51e+05
+   Oh    H       1    0.95e-01      463700
 
 
 [ constrainttypes ]
@@ -72,6 +124,8 @@
   CH3  CH2  CH3       1   114.0  519.646875
   CH3  CH2  CH2       1   114.0  519.646875
   CH2  CH2  CH2       1   114.0  519.646875
+;
+;   Si   Ob   Si       1   109.5     397.488
 
 
 [ dihedraltypes ]

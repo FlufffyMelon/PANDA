@@ -1,0 +1,15 @@
+[moleculetype]
+; molname nrexcl
+  SIL    1
+
+[atoms]
+;     nr    type   resnr residue    atom    cgnr    charge      mass
+{atoms}
+
+[ bonds ]
+;      i       j    func      b0
+{bonds}
+
+[ angles ]
+;      i       j       k    func     th0     cth
+{angles}

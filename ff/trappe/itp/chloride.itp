@@ -1,0 +1,7 @@
+[ moleculetype ]
+; name    nrexcl
+ chloride      1
+
+[ atoms ]
+;  nr    type  resnr   residue    atom    chnr     charge
+    1      Cl      1     CHLOR      Cl       1      -1.0 # CLAYFF

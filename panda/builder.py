@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import os
 import json
 import mdtraj as md
@@ -8,17 +9,12 @@ from hydra.utils import instantiate
 from panda.assembler.build import build
 from panda.assembler.mixer import mixer
 from panda.utils import serialize_component_config
-from panda.geom.CustomSubstrate import CustomSubstrate
-import math
+
 
 # OmegaConf.register_new_resolver("eval", eval)
 # Register a simple eval resolver with mathematical functions
 def _eval_resolver(expr: str):
     try:
-        # Provide mathematical functions in the eval context
-        import math
-        import numpy as np
-
         eval_globals = {
             "sqrt": math.sqrt,
             "log": math.log,
@@ -43,6 +39,7 @@ def _eval_resolver(expr: str):
     except Exception as e:
         raise ValueError(f"Failed to eval expression '{expr}': {e}")
 
+
 if not OmegaConf.has_resolver("eval"):
     OmegaConf.register_new_resolver("eval", _eval_resolver, use_cache=False)
 
@@ -66,6 +63,11 @@ def build_system(config_path):
             substr_path = substr_structure.gro_path
         else:
             raise ValueError("Substrate must be a string or a CustomSubstrate object.")
+
+        # Update config with substrate paths
+        cfg.substr_gro_path = substr_structure.gro_path
+        cfg.substr_itp_path = substr_structure.itp_path
+        cfg.substr_ndx_path = substr_structure.ndx_path
 
         traj = md.load(substr_path)
 
@@ -97,13 +99,19 @@ def build_system(config_path):
 
     # Collect components from config (manual YAML loading, merging with main config for interpolation)
     components = []
-    config_dir = os.path.dirname(config_path)
+    if cfg.get("components_configs_path", None):
+        components_configs_path = cfg.components_configs_path
+    else:
+        components_configs_path = os.path.dirname(config_path)
+    # config_dir = os.path.dirname(config_path)
     # TODO: make config_dir more flexible
     for comp_yaml in cfg.components:
-        comp_path = os.path.join(config_dir, comp_yaml)
+        comp_path = os.path.join(components_configs_path, comp_yaml)
         comp_cfg = OmegaConf.load(comp_path)
         # Remove substrate from config to avoid substrate being created multiple times
-        comp_cft_kwargs = {key: value for key, value in cfg.items() if key != "substrate"}
+        comp_cft_kwargs = {
+            key: value for key, value in cfg.items() if key != "substrate"
+        }
         component = instantiate(comp_cfg, **comp_cft_kwargs)
         components.append(component)
 

@@ -4,7 +4,7 @@
 # Folder for experiment outputs (will be created if it doesn't exist)
 exp_folder: test
 # Name for the generated system (used for output files)
-system_name: cal_decane_tip4p
+system_name: sil_decane_tip4p
 # Output directory (relative to this config file)
 output_dir: ./
 # Path to folder containing molecule structure files (.gro)
@@ -26,11 +26,12 @@ phi: 0.5        # Volume fraction of non-wetting region (droplets)
 # =============================
 # Path to the substrate .gro file (leave blank if not using a substrate)
 substrate:
-  _target_: panda.substrates.CalciteSubstrate
-  unitcell_path: calcite_104_unitcell.gro
+  _target_: panda.substrates.SilicaSubstrate
+  unitcell_path: silica_unitcell.cif
   Lx: 10.0
   Ly: 10.0
   Lz: 4.0
+  silanol_density: 4.79
   build: True
 
 # =============================
