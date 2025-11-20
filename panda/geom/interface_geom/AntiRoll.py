@@ -5,7 +5,7 @@ import numpy as np
 from . import Roll
 
 
-class Antiroll(Roll):
+class AntiRoll(Roll):
     def __init__(
         self,
         center: Union[list, np.array],

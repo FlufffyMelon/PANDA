@@ -70,6 +70,7 @@ def build(
 
     # Build new topology: flat, just residues and atoms
     new_top = md.Topology()
+    new_top.add_residue("", new_top.add_chain()) # Add empty residue to avoid 0 residue id
     # Copy substrate residues and atoms
     for res in initial_traj.topology.residues:
         new_res = new_top.add_residue(res.name, new_top.add_chain())

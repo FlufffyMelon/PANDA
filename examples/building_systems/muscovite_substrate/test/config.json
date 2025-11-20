@@ -1,0 +1,93 @@
+{
+    "exp_folder": "test",
+    "system_name": "musc_decane_tip4p",
+    "output_dir": "./",
+    "mol_path": "./",
+    "WIDTH_X": 9.8893,
+    "WIDTH_Y": 9.95798,
+    "HEIGHT": 3.69164,
+    "H": 6.0,
+    "phi": 0.5,
+    "substrate": {
+        "_target_": "panda.substrates.muscovite.MuscoviteSubstrate",
+        "unitcell_path": "musc_unitcell.cif",
+        "Lx": 10.0,
+        "Ly": 10.0,
+        "Lz": 4.0,
+        "hybridisation": 0,
+        "build": true
+    },
+    "components": [
+        {
+            "name": "decane",
+            "region": {
+                "type": "Box",
+                "center": [
+                    2.472325,
+                    4.97899,
+                    6.69164
+                ],
+                "borders": [
+                    4.94465,
+                    9.95798,
+                    6.0
+                ]
+            },
+            "insertion_region": {
+                "type": "Box",
+                "center": [
+                    2.472325,
+                    4.97899,
+                    6.69164
+                ],
+                "borders": [
+                    4.94465,
+                    9.95798,
+                    6.0
+                ]
+            },
+            "density": 3.0896,
+            "numbers": 913
+        },
+        {
+            "name": "tip4p",
+            "region": {
+                "type": "Box",
+                "center": [
+                    7.416975000000001,
+                    4.97899,
+                    6.69164
+                ],
+                "borders": [
+                    4.94465,
+                    9.95798,
+                    6.0
+                ]
+            },
+            "insertion_region": {
+                "type": "Box",
+                "center": [
+                    7.416975000000001,
+                    4.97899,
+                    6.69164
+                ],
+                "borders": [
+                    4.94465,
+                    9.95798,
+                    6.0
+                ]
+            },
+            "density": 33.3277,
+            "numbers": 9846
+        }
+    ],
+    "insertion_limit": 100000,
+    "rotation_limit": 1000,
+    "package": 0.3,
+    "insertion_attempts": 10,
+    "min2": 0.0064,
+    "opt2": 0.0144,
+    "substr_gro_path": "gro/musc_19x11x2.gro",
+    "substr_itp_path": "itp/musc_19x11x2.itp",
+    "substr_ndx_path": "ndx/musc_19x11x2.ndx"
+}

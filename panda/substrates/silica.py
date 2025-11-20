@@ -89,7 +89,7 @@ def generate_silica_substrate(
     ).astype(int)
     supercell = atoms.repeat((Nx, Ny, 1))
     slab = surface(supercell, (0, 0, 1), layers=Nz, vacuum=0.0)
-    supercell = ase2mdtraj(slab)
+    supercell = ase2mdtraj(slab, residue_name="SIL")
     N_atoms = supercell.n_atoms
     print(
         f"Creating substrate with dimensions {unitcell_box[0] * Nx:.1f}x{unitcell_box[1] * Ny:.1f}x{unitcell_box[2] * Nz:.1f}  ({Nx}x{Ny}x{Nz})..."

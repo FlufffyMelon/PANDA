@@ -1,0 +1,91 @@
+# =============================
+# General Output Settings
+# =============================
+# Folder for experiment outputs (will be created if it doesn't exist)
+exp_folder: sil_decane_tip4p_${wetting_layer}
+# Name for the generated system (used for output files)
+system_name: sil_decane_tip4p
+# Output directory (relative to this config file)
+output_dir: systems
+# Path to folder containing molecule structure files (.gro)
+mol_path: ff/trappe/gro
+# Path of the experiment folder on the server
+server_path: /home/fluffymelon/PANDA_exp/wetting
+
+# =============================
+# System Geometry
+# =============================
+# The following parameters define the simulation box and pore geometry.
+# These are typically overwritten by the substrate file's box size, but are used for region definitions.
+WIDTH_X: 10.0        # Box width in X (nm)
+WIDTH_Y: 10.0        # Box width in Y (nm)
+HEIGHT:  4.0         # Substrate thickness (nm)
+H: 6                 # Pore height above substrate (nm)
+phi: 0.5             # Volume fraction of non-wetting region (droplets)
+wetting_layer: 0.4   # Wetting layer thickness (nm)
+
+# =============================
+# Substrate
+# =============================
+# Path to the substrate .gro file (leave blank if not using a substrate)
+# substrate_unitcell: substrates/calcite/calcite_104_unitcell.gro
+# substrate: None   # Must be replaced with path to substrate`s .gro file in the programm
+# substrate:
+#   _target_: panda.substrates.CalciteSubstrate
+#   unitcell: substrates/calcite/calcite_104_unitcell.gro
+#   Lx: 20.0
+#   Ly: 4.0
+#   Lz: 4.0
+#   build: True
+substrate:
+  _target_: panda.substrates.SilicaSubstrate
+  unitcell_path: substrates/silica/silica_unitcell.cif
+  Lx: 10.0
+  Ly: 10.0
+  Lz: 4.0
+  silanol_density: 4.79
+  build: True
+
+# =============================
+# Components
+# =============================
+# List of component YAML files to include in the system.
+components_configs_path: configs/
+components:
+  - decane_binary_squeeze.yaml
+  - tip4p_binary_squeeze.yaml
+  - chloride.yaml
+
+# =============================
+# Simulation Parameters
+# =============================
+# Parameters for the simulation.
+nsteps: 5000000    # Number of simulation steps (10 ns)
+temp: 300           # Temperature (K)
+scale: 0.5          # Scaling factor for the interaction parameters
+topology: ff/trappe/trappe.top
+pipeline:
+  - ff/trappe/mdp/nvt_sil_steep.mdp
+  - ff/trappe/mdp/nvt_sil_short.mdp
+  - ff/trappe/mdp/nvt_sil_run.mdp
+
+# =============================
+# SBATCH Parameters
+# =============================
+# Parameters for the SBATCH script.
+node: 4             # Number of nodes utilized for simulation
+gpu_id: "1"         # GPU ID to run simulation on (e.g. "0", "1", "01")
+n_mpi: 8           # Number of MPI processes
+init_core: 16        # Initial core to bind the task to
+dependency: -1      # Dependency from other jobs (-1 if no dependency)
+
+# =============================
+# Builder Parameters
+# =============================
+# Advanced parameters for the builder. Usually, defaults are fine.
+insertion_limit: 100000      # Max attempts to insert a molecule
+rotation_limit: 1000         # Max attempts to rotate a molecule for insertion
+package: 0.3                 # Packing density parameter
+insertion_attempts: 10       # Number of insertion attempts per molecule
+min2: 0.0064                 # Minimum allowed squared distance between molecules (nm^2)
+opt2: 0.0144                 # Optimal squared distance for mixing (nm^2)

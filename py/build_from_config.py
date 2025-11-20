@@ -34,7 +34,7 @@ def main(config_path, overrides=None):
 
     # Generating system.itp
     with open(os.path.join(output_path, "system.itp"), "w") as f:
-        for component_cfg in cfg.components:
+        for component_cfg in set(cfg.components):
             f.write(f'#include "{component_cfg.name}.itp"\n')
 
         f.write(f'#include "{osp.split(cfg.substr_itp_path)[-1]}"\n')
@@ -44,6 +44,8 @@ def main(config_path, overrides=None):
         # TODO: Make it more general
         if cfg.substrate.get("silanol_density", None):
             f.write(f"SIL\t{1}\n")
+        elif cfg.substrate.get("hybridisation", None) >= 0:
+            f.write(f"MUSC\t{1}\n")
         else:
             f.write(f"CAL\t{1}\n")
         for i, component_cfg in enumerate(cfg.components):

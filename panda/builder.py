@@ -61,13 +61,13 @@ def build_system(config_path):
 
             # Path to the generated substrate gro file
             substr_path = substr_structure.gro_path
+
+            # Update config with substrate paths
+            cfg.substr_gro_path = substr_structure.gro_path
+            cfg.substr_itp_path = substr_structure.itp_path
+            cfg.substr_ndx_path = substr_structure.ndx_path
         else:
             raise ValueError("Substrate must be a string or a CustomSubstrate object.")
-
-        # Update config with substrate paths
-        cfg.substr_gro_path = substr_structure.gro_path
-        cfg.substr_itp_path = substr_structure.itp_path
-        cfg.substr_ndx_path = substr_structure.ndx_path
 
         traj = md.load(substr_path)
 

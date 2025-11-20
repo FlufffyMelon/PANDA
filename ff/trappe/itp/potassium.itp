@@ -1,0 +1,7 @@
+[ moleculetype ]
+; name    nrexcl
+ potassium      1
+
+[ atoms ]
+;  nr    type  resnr   residue    atom    chnr     charge
+    1      K      1      POTAS       K       1        1.0 # CLAYFF

@@ -223,7 +223,7 @@ def angle(i, j, k, xyz, box):
     return np.rad2deg(angle)
 
 
-def ase2mdtraj(atoms: ase.Atoms):
+def ase2mdtraj(atoms: ase.Atoms, residue_name: str = "CRY"):
     """
     Convert ASE Atoms object to MDTraj Trajectory.
 
@@ -241,7 +241,7 @@ def ase2mdtraj(atoms: ase.Atoms):
     # --- Build MDTraj Topology ---
     top = Topology()
     chain = top.add_chain()
-    res = top.add_residue("CRY", chain)  # single residue called CRY
+    res = top.add_residue(residue_name, chain)  # single residue called CRY
 
     md_atoms = []
     for i, atom in enumerate(atoms):

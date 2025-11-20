@@ -1,0 +1,30 @@
+# =============================
+# TIP4P Component Definition
+# =============================
+# Defines the TIP4P water component for the system.
+# Specify EITHER 'density' (molecules per nm^3) OR 'numbers' (total molecules).
+# Optionally, you can define 'insertion_region' (defaults to 'region' if not set).
+
+_target_: panda.Component    # Class to instantiate for this component
+name: tip4p                  # Name of the molecule/component
+
+density: 33.3277             # Number density (molecules per nm^3)
+# numbers: 10000             # (Alternative) Total number of molecules
+
+# region: geometric area where molecules are present and counted
+region:
+  _target_: panda.geom.Box
+  center:
+    - ${eval:${WIDTH_X} / 2 + ${WIDTH_X} * ${phi} / 2}
+    - ${eval:${WIDTH_Y} / 2}
+    - ${eval:${HEIGHT} + ${H} / 2}
+  borders:
+    - ${eval:${WIDTH_X} - ${WIDTH_X} * ${phi}}
+    - ${WIDTH_Y}
+    - ${H}
+
+# insertion_region: (optional) area where molecules are inserted; defaults to 'region' if omitted
+# insertion_region:
+#   _target_: panda.geom.Box
+#   center: ...
+#   borders: ...

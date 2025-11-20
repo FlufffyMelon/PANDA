@@ -24,18 +24,21 @@
    HWT     1.0080    0.000  A    0.00e+00    0.00e+00
    MWT     0.0000    0.000  D    0.00e+00    0.00e+00
 ; CLAYFF
-;    Si     28.086	   2.100	A	   0.330203	   7.70065E-06; st tetrahedral silicon
-;    Ob     15.999   -1.050	A	   0.316554	   0.650194; ob bridging oxygen
-;    Oh     15.999   -0.950	A	   0.316554	   0.650194; oh hydroxyl oxygen
-;     O     15.999   -0.525	A	   0.316554	   0.650194; os silicon oxygen
-;     H     1.0079    0.425	A	   0.000000	   0.000000; ho hydroxyl hydrogen
+;    st     28.086	   2.100	A	   0.330203	   7.70065E-06; st tetrahedral silicon
+;    ob     15.999   -1.050	A	   0.316554	   0.650194; ob bridging oxygen
+;    oh     15.999   -0.950	A	   0.316554	   0.650194; oh hydroxyl oxygen
+;     os     15.999   -0.525	A	   0.316554	   0.650194; os silicon oxygen
+;     ho     1.0079    0.425	A	   0.000000	   0.000000; ho hydroxyl hydrogen
 ;    Cl	   35.453	  -1.000	A	   0.439997	   0.418818; Cl aqueous chloride ion
-    Si     28.086	   2.100	A	   3.99e-08	   5.18e-11; st tetrahedral silicon
-    Ob     15.999   -1.050	A	   2.62e-03	   2.63e-06; ob bridging oxygen
-    Oh     15.999   -0.950	A	   2.62e-03	   2.63e-06; oh hydroxyl oxygen
-     O     15.999   -0.525	A	   2.62e-03	   2.63e-06; os silicon oxygen
-     H     1.0079    0.425	A	   0.00e+00	   0.00e+00; ho hydroxyl hydrogen
-    Cl	   35.453	  -1.000	A	   1.22e-02	   8.82e-05; Cl aqueous chloride ion
+    st     28.086	   2.100	A	   3.992762e-08	   5.175586e-11; st tetrahedral silicon
+    at	   26.982	   1.575	A    3.992762e-08	   5.175586e-11; at tetrahedral aluminum
+    ao	   26.982	   1.575	A	   1.351331e-07    8.205130e-10; ao octahedral aluminum
+    ob     15.999   -1.050	A	   2.616916e-03	   2.633156e-06; ob bridging oxygen
+   obt	   15.999 	-1.1688	A	   2.616916e-03	   2.633156e-06; obts bridging oxygen with tetrahedral substitution
+    oh     15.999   -0.950	A	   2.616916e-03	   2.633156e-06; oh hydroxyl oxygen
+    ho     1.0079    0.425	A	   0.000000e+00	   0.000000e+00; ho hydroxyl hydrogen
+    Cl	   35.453	  -1.000	A	   1.215580e-02	   8.820271e-05; Cl aqueous chloride ion
+     K	   39.098	   1.000	A	   9.017153e-15    4.858332e-29; K aqueous potassium ion
 
 [ nonbond_params ]
 ;   i    j    func          C6         C12
@@ -61,54 +64,147 @@
   CH3  OCA       1    {C6_CH3_OCA}    {C12_CH3_OCA}
   CH3  CCA       1    {C6_CH3_CCA}    {C12_CH3_CCA}
 ; pairwise LJ for silica CLAYFF (2 combination rule)
-   Si   Si       1    3.99e-08    5.18e-11
-   Si   Ob       1    1.02e-05    1.17e-08
-   Si   Oh       1    1.02e-05    1.17e-08
-   Si    O       1    1.02e-05    1.17e-08
-   Ob   Ob       1    2.62e-03    2.63e-06
-   Ob   Oh       1    2.62e-03    2.63e-06
-   Ob    O       1    2.62e-03    2.63e-06
-   Oh   Oh       1    2.62e-03    2.63e-06
-   Oh    O       1    2.62e-03    2.63e-06
-    O    O       1    2.62e-03    2.63e-06
+;   st   st       1    3.99e-08    5.18e-11
+;   st   ob       1    1.02e-05    1.17e-08
+;   st   oh       1    1.02e-05    1.17e-08
+;   st   os       1    1.02e-05    1.17e-08
+;   ob   ob       1    2.62e-03    2.63e-06
+;   ob   oh       1    2.62e-03    2.63e-06
+;   ob   os       1    2.62e-03    2.63e-06
+;   oh   oh       1    2.62e-03    2.63e-06
+;   oh   os       1    2.62e-03    2.63e-06
+;   os   os       1    2.62e-03    2.63e-06
 ; pairwise LJ for silica and Cl CLAYFF (2 combination rule)
-   Si   Cl       1    2.35e-05    7.64e-08
-   Ob   Cl       1    6.13e-03    1.79e-05
-   Oh   Cl       1    6.13e-03    1.79e-05
-    O   Cl       1    6.13e-03    1.79e-05
-   Cl   Cl       1    1.22e-02    8.82e-05
+;   st   Cl       1    2.35e-05    7.64e-08
+;   ob   Cl       1    6.13e-03    1.79e-05
+;   oh   Cl       1    6.13e-03    1.79e-05
+;   os   Cl       1    6.13e-03    1.79e-05
+;   Cl   Cl       1    1.22e-02    8.82e-05
 ; pairwise LJ for silica and water CLAYFF (2 combination rule)
-  Si  OWT      1    1.11e-05    1.26e-08
-  Ob  OWT      1    2.85e-03    2.84e-06
-  Oh  OWT      1    2.85e-03    2.84e-06
-   O  OWT      1    2.85e-03    2.84e-06
+;  st  OWT      1    1.11e-05    1.26e-08
+;  ob  OWT      1    2.85e-03    2.84e-06
+;  oh  OWT      1    2.85e-03    2.84e-06
+;  os  OWT      1    2.85e-03    2.84e-06
 ; pairwise LJ for silica CLAYFF and decane TraPPE (2 combination rule)
-  Si  CH2      1    1.56e-05    3.55e-08
-  Si  CH3      1    1.92e-05    3.70e-08
-  Si   CH      1    1.32e-05    2.42e-08
-  Ob  CH2      1    4.05e-03    8.21e-06
-  Ob  CH3      1    4.98e-03    8.50e-06
-  Ob   CH      1    3.41e-03    5.55e-06
-  Oh  CH2      1    4.05e-03    8.21e-06
-  Oh  CH3      1    4.98e-03    8.50e-06
-  Oh   CH      1    3.41e-03    5.55e-06
-   O  CH2      1    4.05e-03    8.21e-06
-   O  CH3      1    4.98e-03    8.50e-06
-   O   CH      1    3.41e-03    5.55e-06
+;  st  CH2      1    1.56e-05    3.55e-08
+;  st  CH3      1    1.92e-05    3.70e-08
+;  st   CH      1    1.32e-05    2.42e-08
+;  ob  CH2      1    4.05e-03    8.21e-06
+;  ob  CH3      1    4.98e-03    8.50e-06
+;  ob   CH      1    3.41e-03    5.55e-06
+;  oh  CH2      1    4.05e-03    8.21e-06
+;  oh  CH3      1    4.98e-03    8.50e-06
+;  oh   CH      1    3.41e-03    5.55e-06
+;  os  CH2      1    4.05e-03    8.21e-06
+;  os  CH3      1    4.98e-03    8.50e-06
+;  os   CH      1    3.41e-03    5.55e-06
+; pairwise LJ for CLAYFF (2 combination rule)
+    st  st     1    3.990000e-08    5.180000e-11
+    st  at     1    3.990000e-08    5.180000e-11
+    st  ao     1    7.712052e-08    2.277035e-10
+    st  ob     1    1.023848e-05    1.170415e-08
+    st obt     1    1.023848e-05    1.170415e-08
+    st  oh     1    1.023848e-05    1.170415e-08
+    st  ho     1    0.000000e+00    0.000000e+00
+    st  Cl     1    2.345603e-05    7.639682e-08
+    st   K     1    1.569274e-07    3.433214e-12
+    at  at     1    3.990000e-08    5.180000e-11
+    at  ao     1    7.712052e-08    2.277035e-10
+    at  ob     1    1.023848e-05    1.170415e-08
+    at obt     1    1.023848e-05    1.170415e-08
+    at  oh     1    1.023848e-05    1.170415e-08
+    at  ho     1    0.000000e+00    0.000000e+00
+    at  Cl     1    2.345603e-05    7.639682e-08
+    at   K     1    1.569274e-07    3.433214e-12
+    ao  ao     1    1.350000e-07    8.210000e-10
+    ao  ob     1    2.011730e-05    5.316842e-08
+    ao obt     1    2.011730e-05    5.316842e-08
+    ao  oh     1    2.011730e-05    5.316842e-08
+    ao  ho     1    0.000000e+00    0.000000e+00
+    ao  Cl     1    4.060854e-05    2.694306e-07
+    ao   K     1    6.141760e-07    6.187783e-11
+    ob  ob     1    2.620000e-03    2.630000e-06
+    ob obt     1    2.620000e-03    2.630000e-06
+    ob  oh     1    2.620000e-03    2.630000e-06
+    ob  ho     1    0.000000e+00    0.000000e+00
+    ob  Cl     1    6.129737e-03    1.790337e-05
+    ob   K     1    3.547644e-05    6.020993e-10
+   obt obt     1    2.620000e-03    2.630000e-06
+   obt  oh     1    2.620000e-03    2.630000e-06
+   obt  ho     1    0.000000e+00    0.000000e+00
+   obt  Cl     1    6.129737e-03    1.790337e-05
+   obt   K     1    3.547644e-05    6.020993e-10
+    oh  oh     1    2.620000e-03    2.630000e-06
+    oh  ho     1    0.000000e+00    0.000000e+00
+    oh  Cl     1    6.129737e-03    1.790337e-05
+    oh   K     1    3.547644e-05    6.020993e-10
+    ho  ho     1    0.000000e+00    0.000000e+00
+    ho  Cl     1    0.000000e+00    0.000000e+00
+    ho   K     1    0.000000e+00    0.000000e+00
+    Cl  Cl     1    1.220000e-02    8.820000e-05
+    Cl   K     1    2.009727e-04    2.403035e-08
+     K   K     1    9.020000e-15    4.860000e-29
+; pairwise LJ for CLAYFF and TraPPE (2 combination rule)
+    st CH2     1    1.559610e-05    3.550129e-08
+    st CH3     1    1.924421e-05    3.701384e-08
+    st  CH     1    1.317754e-05    2.421845e-08
+    at CH2     1    1.559610e-05    3.550129e-08
+    at CH3     1    1.924421e-05    3.701384e-08
+    at  CH     1    1.317754e-05    2.421845e-08
+    ao CH2     1    2.813499e-05    1.359413e-07
+    ao CH3     1    3.542125e-05    1.475495e-07
+    ao  CH     1    2.438896e-05    9.761347e-08
+    ob CH2     1    4.048211e-03    8.207728e-06
+    ob CH3     1    4.978533e-03    8.500637e-06
+    ob  CH     1    3.405951e-03    5.551863e-06
+   obt CH2     1    4.048211e-03    8.207728e-06
+   obt CH3     1    4.978533e-03    8.500637e-06
+   obt  CH     1    3.405951e-03    5.551863e-06
+    oh CH2     1    4.048211e-03    8.207728e-06
+    oh CH3     1    4.978533e-03    8.500637e-06
+    oh  CH     1    3.405951e-03    5.551863e-06
+    ho CH2     1    0.000000e+00    0.000000e+00
+    ho CH3     1    0.000000e+00    0.000000e+00
+    ho  CH     1    0.000000e+00    0.000000e+00
+    Cl CH2     1    8.491754e-03    4.491478e-05
+    Cl CH3     1    1.071496e-02    4.896972e-05
+    Cl  CH     1    7.382219e-03    3.243648e-05
+     K CH2     1    1.012451e-04    6.410313e-09
+     K CH3     1    1.084778e-04    5.039246e-09
+     K  CH     1    7.141154e-05    3.047430e-09
+; pairwise LJ for CLAYFF and WATER tip4p2005 (2 combination rule)
+    st OWT     1    1.112021e-05    1.264820e-08
+    st HWT     1    0.000000e+00    0.000000e+00
+    at OWT     1    1.112021e-05    1.264820e-08
+    at HWT     1    0.000000e+00    0.000000e+00
+    ao OWT     1    2.186415e-05    5.753255e-08
+    ao HWT     1    0.000000e+00    0.000000e+00
+    ob OWT     1    2.845318e-03    2.841509e-06
+    ob HWT     1    0.000000e+00    0.000000e+00
+   obt OWT     1    2.845318e-03    2.841509e-06
+   obt HWT     1    0.000000e+00    0.000000e+00
+    oh OWT     1    2.845318e-03    2.841509e-06
+    oh HWT     1    0.000000e+00    0.000000e+00
+    ho OWT     1    0.000000e+00    0.000000e+00
+    ho HWT     1    0.000000e+00    0.000000e+00
+    Cl OWT     1    6.662484e-03    1.937571e-05
+    Cl HWT     1    0.000000e+00    0.000000e+00
+     K OWT     1    3.833450e-05    6.440237e-10
+     K HWT     1    0.000000e+00    0.000000e+00
 
 
 [ bondtypes ]
 ;   i    j    func          b0          k0
-; bond Si - O CLAYFF
-;   Si   Ob       1    1.63e-01    2.51e+05
-;   Si   Oh       1    1.63e-01    2.51e+05
-;   Si    O       1    1.63e-01    2.51e+05
-   Oh    H       1    0.95e-01      463700
+; CLAYFF
+;   st   ob       1    1.63e-01    2.51e+05
+;   st   oh       1    1.63e-01    2.51e+05
+;   st    os       1    1.63e-01    2.51e+05
+   oh    ho       1        0.1      463700
 
 
 [ constrainttypes ]
 ;   i    j    func          b0
-; constrain C-O for calcite (https://doi.org/10.1021/acs.energyfuels.7b02451)
+; constrain C-os for calcite (https://doi.org/10.1021/acs.energyfuels.7b02451)
   CCA  OCA       1    1.18e-01
 ; CHX-CHY
   CH2  CH2       1    1.54e-01
@@ -118,14 +214,15 @@
 
 [ angletypes ]
 ;   i    j    k    func     th0         cth
-; angle O-C-O for calcite (https://doi.org/10.1021/acs.energyfuels.7b02451)
+; angle os-C-os for calcite (https://doi.org/10.1021/acs.energyfuels.7b02451)
   OCA  CCA  OCA       1   114.0      1852.0
 ; CHX-[CH2]-CHY
   CH3  CH2  CH3       1   114.0  519.646875
   CH3  CH2  CH2       1   114.0  519.646875
   CH2  CH2  CH2       1   114.0  519.646875
-;
-;   Si   Ob   Si       1   109.5     397.488
+; CLAYFF
+   ao   oh   ho      1        109.47  251.04
+   at   oh   ho      1        109.47  251.04
 
 
 [ dihedraltypes ]
